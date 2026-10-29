@@ -398,7 +398,7 @@ html = f"""<!DOCTYPE html>
       <div><strong>Prepared for:</strong> Enterprise Buyer Security Review Team</div>
       <div><strong>Prepared:</strong> {TODAY.strftime('%B %-d, %Y')}</div>
       <div><strong>Scope:</strong> ClearPath Patient Engagement Platform (production)</div>
-      <div><strong>Document support:</strong> Sui-Generis LLC &mdash; Deal Unlocker</div>
+      <div><strong>Document support:</strong> Sui-Generis &mdash; Deal Unlocker</div>
     </div>
   </div>
 
@@ -461,7 +461,7 @@ html = f"""<!DOCTYPE html>
 
   <div class="footer">
     <div>ClearPath Health, Inc. &mdash; SIG Lite Response &amp; Gap Register &mdash; Fictional sample for demonstration purposes only.</div>
-    <div>Prepared with Deal Unlocker by Sui-Generis LLC &mdash; Knoxville, TN</div>
+    <div>Prepared with Deal Unlocker by Sui-Generis &mdash; Knoxville, TN</div>
   </div>
 
 </div>

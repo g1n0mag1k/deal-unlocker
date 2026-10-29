@@ -1,7 +1,8 @@
 # deal-unlocker
 72-hour security questionnaire completion service — SIG Lite, CAIQ, and custom formats. Answer library, Gap Register, and Reviewer Brief generation.
 
-Productized by Sui-Generis LLC.
+Productized by Sui-Generis. See [`PRICING.md`](PRICING.md) for the full
+tier/add-on structure.
 
 ## Layout
 

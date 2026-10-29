@@ -5,7 +5,7 @@ build_deliverable.py
 =====================
 
 Deal Unlocker — Standalone Reusable Gap Register / Reviewer Brief Generator
-Sui-Generis LLC
+Sui-Generis
 
 Produces the client-facing deliverable: a single print-ready HTML document
 combining the Reviewer Brief (one-pager summary), the full Answer Set, and
@@ -76,7 +76,7 @@ See client_config_example.json for a filled-in example. Fields:
                               watermark and footer language. ALWAYS false for a real client
                               engagement; this flag exists so this same script also builds
                               fictional sales-asset samples like ClearPath Health.
-  firm_name                   (optional, default "Sui-Generis LLC")
+  firm_name                   (optional, default "Sui-Generis")
   firm_location                 (optional, default "Knoxville, TN")
   id_prefix                      (optional, default "Q") — short prefix for auto-numbered
                                    question IDs, e.g. "SIG" -> "SIG-01".
@@ -215,7 +215,7 @@ def load_config(path: Path):
 
     config.setdefault("buyer_label", "Enterprise Buyer Security Review Team")
     config.setdefault("is_sample", False)
-    config.setdefault("firm_name", "Sui-Generis LLC")
+    config.setdefault("firm_name", "Sui-Generis")
     config.setdefault("firm_location", "Knoxville, TN")
     config.setdefault("id_prefix", "Q")
     config.setdefault("priority_callout", None)
