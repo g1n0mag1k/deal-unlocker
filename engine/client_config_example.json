@@ -1,0 +1,24 @@
+{
+  "_comment": "Example client config for answer_engine.py --client-config. Only simple UPPER_SNAKE placeholder keys (no spaces/commas in the template token) are substituted automatically -- anything else in a template (e.g. {{N, e.g., Okta}}) is a free-text note for a human to fill in by hand, and will show up in the output's unresolved_placeholders column regardless of this file.",
+
+  "COMPANY": "ClearPath Health, Inc.",
+  "FREQUENCY": "monthly",
+  "ASSET_INVENTORY_DOC": "Asset Inventory v1.3",
+  "ASSET_MGMT_POLICY": "Asset Management Policy v1.1",
+  "DATA_CLASS_POLICY": "Data Classification Policy v1.0",
+  "ENCRYPTION_STD": "Encryption Standard v1.0",
+  "BACKUP_POLICY": "Backup & Recovery Policy v1.0",
+  "INFOSEC_POLICY": "Information Security Policy v1.2",
+  "IAM_POLICY": "Identity & Access Management Policy v1.1",
+  "CHANGE_MGMT_POLICY": "Change Management Policy v1.0",
+  "IR_PLAN": "Incident Response Plan v1.0",
+  "BCDR_PLAN": "Business Continuity & DR Plan v1.0",
+  "LOGGING_STANDARD": "Logging Standard v1.0",
+  "AUP": "Acceptable Use Policy v1.0",
+  "SECTION": "2",
+  "MDM_PRODUCT": "Jamf / Microsoft Intune",
+  "CLOUD_PROVIDER": "AWS",
+  "CLOUD_REGION": "AWS us-east-1",
+  "SECRETS_MANAGER": "AWS Secrets Manager",
+  "IDP": "Okta"
+}

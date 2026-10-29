@@ -1,0 +1,1313 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Builds the master SIG Lite / CAIQ / custom-questionnaire answer library CSV.
+
+This is reusable infrastructure, not tied to any one client. Each row is a
+canonical control question with alternate phrasings (for fuzzy matching),
+a default answer, a templated answer sentence with {{placeholders}} to be
+filled per client, the artifact type that should back it up, and guidance
+for the engineer on what to verify before reusing the canned answer.
+
+Output: answer_library_master.csv
+"""
+
+import csv
+
+ROWS = []
+
+def add(domain, q, variants, keywords, frameworks, default_ans, template, artifact, guidance):
+    rid = f"AL-{len(ROWS)+1:03d}"
+    ROWS.append(dict(
+        id=rid, domain=domain, canonical_question=q,
+        question_variants=" | ".join(variants),
+        keywords=", ".join(keywords),
+        frameworks=", ".join(frameworks),
+        default_answer=default_ans,
+        answer_template=template,
+        artifact_type=artifact,
+        verification_guidance=guidance,
+    ))
+
+F_SIG = "SIG Lite"
+F_CAIQ = "CAIQ"
+F_CUST = "Custom"
+
+# =====================================================================
+# ASSET MANAGEMENT (10)
+# =====================================================================
+add("Asset Management",
+    "Does the organization maintain an inventory of all information system assets (hardware, software, cloud services)?",
+    ["Do you have an asset inventory?", "Is there a hardware/software asset register?"],
+    ["asset inventory", "CMDB", "asset register"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains an asset inventory covering hardware, software, and cloud service assets, reconciled on a {{FREQUENCY}} basis. Ref: {{ASSET_INVENTORY_DOC}}.",
+    "Asset Inventory (spreadsheet or CMDB export)",
+    "Confirm the inventory was actually updated within the last reconciliation cycle before citing it; stale inventories are a common red flag in follow-up diligence.")
+
+add("Asset Management",
+    "Is the asset inventory updated on a defined schedule?",
+    ["How often is the asset inventory refreshed?"],
+    ["asset inventory cadence", "reconciliation"], [F_SIG, F_CUST], "Y",
+    "The asset inventory is reconciled {{FREQUENCY}} per {{ASSET_MGMT_POLICY}}, §{{SECTION}}.",
+    "Asset Management Policy",
+    "Pull the actual last-modified date on the inventory file/CMDB and compare against the stated cadence before answering Yes.")
+
+add("Asset Management",
+    "Are all production servers and endpoints tagged with a data classification level?",
+    ["Is data classification applied at the asset level?"],
+    ["data classification tagging", "asset tagging"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} classifies data types under {{DATA_CLASS_POLICY}}, but classification is not yet tagged at the individual asset level.",
+    "Data Classification Tagging Standard",
+    "This is commonly a gap for early-stage companies. If the client does tag assets, verify it covers both cloud resources (tags/labels) and physical/endpoint assets, not just one.")
+
+add("Asset Management",
+    "Is there a documented asset decommissioning/disposal procedure, including data sanitization?",
+    ["How do you dispose of retired hardware?", "Is there a secure disposal process?"],
+    ["decommissioning", "disposal", "data sanitization", "secure wipe"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} follows a documented decommissioning procedure requiring data sanitization (NIST 800-88 or equivalent) prior to asset disposal or return. Ref: {{DECOMM_SOP}}.",
+    "Asset Decommissioning SOP",
+    "Ask whether the procedure covers cloud-resource teardown (e.g., deleting orphaned snapshots/volumes), not just physical hardware wipe.")
+
+add("Asset Management",
+    "Are mobile devices used to access company systems enrolled in a mobile device management (MDM) solution?",
+    ["Do you use MDM?", "Is BYOD managed?"],
+    ["MDM", "mobile device management", "BYOD"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Mobile devices accessing {{COMPANY}} systems are enrolled in {{MDM_PRODUCT}} per {{MDM_POLICY}}.",
+    "MDM Enrollment Policy / MDM console export",
+    "If BYOD is allowed, confirm personal devices are actually enrolled, not just company-issued ones — this is a frequent gap between stated policy and practice.")
+
+add("Asset Management",
+    "Is full-disk encryption enforced on all laptops issued to employees?",
+    ["Are endpoints encrypted at rest?"],
+    ["full-disk encryption", "FDE", "BitLocker", "FileVault"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Full-disk encryption ({{FDE_TOOL}}) is enforced on all company-issued laptops via {{MDM_PRODUCT}} policy. Ref: {{ENDPOINT_ENCRYPTION_STD}}.",
+    "Endpoint Encryption Standard / MDM compliance report",
+    "Verify enforcement, not just availability — pull an MDM compliance report showing the percentage of enrolled devices with FDE actually active.")
+
+add("Asset Management",
+    "Does the organization maintain a software bill of materials (SBOM) for its production application?",
+    ["Do you generate an SBOM?", "Is dependency inventory tracked?"],
+    ["SBOM", "software bill of materials", "dependency inventory"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently generate a formal SBOM; dependency tracking is handled via {{DEP_TOOL, e.g., package manager lockfiles / Dependabot}}.",
+    "Software Bill of Materials (SBOM)",
+    "If the client uses Dependabot/Snyk/similar, note that as partial mitigation in the answer even when the formal-SBOM answer is No — reviewers read this favorably.")
+
+add("Asset Management",
+    "Are end-of-life / end-of-support dates tracked for all software and operating system versions in use?",
+    ["Do you track EOL/EOS dates?"],
+    ["EOL", "EOS", "end of life", "end of support"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not currently maintain a centralized EOL/EOS tracking register; this is addressed in the remediation plan, target {{TARGET_DATE}}.",
+    "EOL/EOS Tracking Register",
+    "Common gap at small companies. Confirm whether OS patching is at least current in practice even without formal tracking — worth noting as a mitigating factor.")
+
+add("Asset Management",
+    "Is there a formal asset ownership assignment, with each asset mapped to a named owner?",
+    ["Does every asset have an owner?"],
+    ["asset ownership", "asset owner"], [F_SIG, F_CAIQ], "Y",
+    "Each asset in the inventory is mapped to a named owner. Ref: {{ASSET_INVENTORY_DOC}}, “Owner” field.",
+    "Asset Inventory (Owner column populated)",
+    "Spot-check a few rows of the actual inventory to confirm the Owner field is populated, not just present as a column header.")
+
+add("Asset Management",
+    "Are removable media (USB drives, external storage) restricted or prohibited on company endpoints?",
+    ["Is USB storage blocked?"],
+    ["removable media", "USB restriction"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Removable media is restricted on company endpoints via {{MDM_PRODUCT}} policy. Ref: {{ENDPOINT_SECURITY_POLICY}}, §{{SECTION}}.",
+    "Endpoint Security Policy",
+    "If the answer is Yes, confirm the restriction is technically enforced (device control policy), not just a written prohibition with no enforcement mechanism.")
+
+# =====================================================================
+# DATA GOVERNANCE / DATA MANAGEMENT (16)
+# =====================================================================
+add("Data Governance",
+    "Does the organization maintain a data classification policy (e.g., public / internal / confidential / restricted)?",
+    ["Do you classify data?"],
+    ["data classification", "classification tiers"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a data classification policy defining {{N}} tiers (e.g., public, internal, confidential, restricted). Ref: {{DATA_CLASS_POLICY}}.",
+    "Data Classification Policy",
+    "Confirm the policy is actually referenced/used in practice (e.g., in onboarding training), not just a document that exists.")
+
+add("Data Governance",
+    "Is PHI / ePHI specifically identified and labeled as a distinct data classification tier?",
+    ["Is PHI called out separately in your classification scheme?"],
+    ["PHI classification", "ePHI tier"], [F_SIG, F_CUST], "Y",
+    "PHI/ePHI is identified as a distinct, highest-sensitivity tier under {{DATA_CLASS_POLICY}}, §{{SECTION}}.",
+    "Data Classification Policy",
+    "Only answer Yes if PHI genuinely has its own tier with elevated handling requirements, not just lumped into “confidential.”")
+
+add("Data Governance",
+    "Is data encrypted at rest for all production databases?",
+    ["Is encryption at rest enabled?"],
+    ["encryption at rest", "database encryption"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production databases are encrypted at rest using {{ENCRYPTION_ALGO, e.g., AES-256}} via {{PROVIDER_ENCRYPTION_FEATURE, e.g., AWS RDS storage encryption}}. Ref: {{ENCRYPTION_STD}}.",
+    "Encryption Standard / cloud console screenshot",
+    "Verify this in the cloud console directly (e.g., RDS encryption flag) rather than taking the policy document's word for it — policy and implementation drift apart often.")
+
+add("Data Governance",
+    "Is data encrypted in transit (TLS 1.2 or higher) for all external connections?",
+    ["Do you enforce TLS?"],
+    ["encryption in transit", "TLS"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "TLS {{TLS_VERSION, e.g., 1.2}} or higher is enforced for all external connections at {{ENFORCEMENT_POINT, e.g., the load balancer}}. Ref: {{ENCRYPTION_STD}}, §{{SECTION}}.",
+    "Encryption Standard / SSL Labs scan result",
+    "Run a quick SSL Labs or testssl.sh scan against the client's production domain before finalizing this answer — cheap to verify, embarrassing to get wrong.")
+
+add("Data Governance",
+    "Does the organization maintain a documented data retention schedule?",
+    ["Do you have a retention policy?"],
+    ["data retention", "retention schedule"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} does not yet maintain a formal, documented data retention schedule; data is currently retained indefinitely absent a deletion request.",
+    "Data Retention Schedule",
+    "Very common gap. If answering No, still note any ad hoc retention practices that do exist (e.g., log retention settings) as partial mitigation.")
+
+add("Data Governance",
+    "Is there a documented and tested data deletion/destruction procedure upon client request or contract termination?",
+    ["How do you handle data deletion requests?"],
+    ["data deletion", "right to erasure", "contract termination data handling"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} handles data deletion requests on a manual, case-by-case basis; a formal, tested procedure is in development, target {{TARGET_DATE}}.",
+    "Data Deletion & Destruction SOP",
+    "Even if the formal process is a gap, confirm whether deletions have actually been honored in practice — that track record matters to reviewers.")
+
+add("Data Governance",
+    "Are database backups encrypted?",
+    ["Is backup encryption enabled?"],
+    ["backup encryption"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Database backups are encrypted using {{ENCRYPTION_ALGO}} via {{BACKUP_PROVIDER_FEATURE, e.g., AWS KMS}}. Ref: {{BACKUP_POLICY}}, §{{SECTION}}.",
+    "Backup & Recovery Policy / cloud console screenshot",
+    "Confirm encryption applies to the actual backup artifact (snapshot/export), not just the live database it was taken from.")
+
+add("Data Governance",
+    "Is production data used in non-production (development/test/staging) environments?",
+    ["Do you copy prod data to staging?"],
+    ["production data in staging", "prod data in dev"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} {{does not copy / masks before copying}} production data into non-production environments. {{If masking: Ref MASKING_PROCEDURE.}}",
+    "Non-Production Data Handling Policy",
+    "This answer must match reality exactly — if prod PHI is copied unmasked to staging anywhere, that is a high-priority gap regardless of what the policy says. Verify with engineering directly.")
+
+add("Data Governance",
+    "Is there a data masking or de-identification process for any non-production use of data?",
+    ["Do you mask/anonymize data for testing?"],
+    ["data masking", "de-identification", "synthetic data"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently have an automated masking/de-identification process for non-production data use.",
+    "Data Masking / Synthetic Data Procedure",
+    "If this is a gap alongside the prior question (prod data copied to staging), flag it as High priority in the Gap Register — the combination is a meaningful exposure.")
+
+add("Data Governance",
+    "Does the organization maintain a documented data flow diagram showing where PHI is collected, stored, processed, and transmitted?",
+    ["Is there a data flow map?"],
+    ["data flow diagram", "data mapping"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a data flow diagram covering collection, storage, processing, and transmission of PHI, last reviewed {{LAST_REVIEWED}}. Ref: {{DATA_FLOW_DIAGRAM}}.",
+    "Data Flow Diagram",
+    "Check the diagram's last-reviewed date against any recent architecture changes (new subprocessor, new region, new data type) before citing it.")
+
+add("Data Governance",
+    "Are database administrative credentials stored in a secrets manager rather than hardcoded or in plaintext?",
+    ["How are DB credentials managed?"],
+    ["secrets management", "credential storage"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Database administrative credentials are stored in {{SECRETS_MANAGER, e.g., AWS Secrets Manager}} per {{SECRETS_MGMT_STD}}.",
+    "Secrets Management Standard",
+    "Spot-check: ask for (or grep, with permission, in a code review context) confirmation that no credentials appear in source control or .env files committed to the repo.")
+
+add("Data Governance",
+    "Is there a defined data owner or steward for each major data category?",
+    ["Who owns each data category?"],
+    ["data stewardship", "data owner"], [F_SIG, F_CAIQ], "Y",
+    "Each major data category has a designated owner/steward. Ref: {{DATA_CLASS_POLICY}}, Appendix {{APPENDIX}}.",
+    "Data Classification Policy (ownership appendix)",
+    "Confirm named owners are current employees in the right roles, not stale names from a prior team structure.")
+
+add("Data Governance",
+    "Does the organization encrypt data stored on backup media or offsite backups?",
+    ["Are offsite/archival backups encrypted?"],
+    ["offsite backup encryption", "archival encryption"], [F_SIG, F_CAIQ], "Y",
+    "Offsite and archival backups are encrypted per {{BACKUP_POLICY}}, §{{SECTION}}.",
+    "Backup & Recovery Policy",
+    "If backups are cloud-native snapshots rather than physical offsite media, say so explicitly — reviewers sometimes read this question as assuming tape/physical media.")
+
+add("Data Governance",
+    "Is there a process to ensure data minimization, i.e., collecting only data necessary for the stated purpose?",
+    ["Do you practice data minimization?"],
+    ["data minimization", "privacy by design"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}} applies a privacy-by-design review at feature intake to ensure only necessary data is collected. Ref: {{PRIVACY_BY_DESIGN_CHECKLIST}}.",
+    "Privacy-by-Design Checklist",
+    "If there's no formal checklist, consider whether to answer Partial/No rather than Yes — an informal practice without documentation is a weaker claim under scrutiny.")
+
+add("Data Governance",
+    "Does the organization have a documented process for responding to data subject access requests (DSARs)?",
+    ["How do you handle DSARs or patient record requests?"],
+    ["DSAR", "data subject access request", "patient access request"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} handles access requests manually; a formal documented DSAR procedure is {{in development / planned}}, target {{TARGET_DATE}}.",
+    "DSAR / Access Request SOP",
+    "For healthcare clients, confirm this is distinguished from the HIPAA Right of Access process, which may already exist separately — don't conflate the two in the answer.")
+
+add("Data Governance",
+    "Is data residency/location restricted to specific geographic regions per contractual or regulatory requirements?",
+    ["Where is data physically stored?"],
+    ["data residency", "data localization"], [F_SIG, F_CAIQ], "Y",
+    "Production data is stored in {{CLOUD_REGION, e.g., AWS us-east-1}} with no cross-region replication outside {{PERMITTED_REGIONS}}.",
+    "Infrastructure Architecture Diagram",
+    "Confirm against the actual cloud account's region configuration, including any CDN edge caching that could technically move data outside the stated region.")
+
+add("Data Governance",
+    "Does the organization have a process to identify and inventory all locations where PHI is stored (databases, file storage, email, backups, logs, third-party tools)?",
+    ["Do you know everywhere PHI lives?"],
+    ["PHI inventory", "data discovery"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} has mapped primary PHI storage locations in {{DATA_FLOW_DIAGRAM}} but has not performed a comprehensive discovery sweep covering logs, email, and ancillary tools.",
+    "Data Flow Diagram + PHI Discovery Sweep",
+    "This is frequently the honest answer for small companies — PHI often leaks into logs or support-ticket tools that never made it onto the official data flow diagram. Worth a dedicated discovery pass before answering Yes.")
+
+# =====================================================================
+# SECURITY POLICY / GOVERNANCE (12)
+# =====================================================================
+add("Security Policy & Governance",
+    "Does the organization maintain a formal, leadership-approved information security policy?",
+    ["Is there a written InfoSec policy?"],
+    ["information security policy", "InfoSec policy"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a leadership-approved Information Security Policy, approved {{APPROVAL_DATE}}. Ref: {{INFOSEC_POLICY}}.",
+    "Information Security Policy",
+    "Confirm actual sign-off (email, board minutes, or signature) exists for the approval date cited, not just an assumed date.")
+
+add("Security Policy & Governance",
+    "Is the information security policy reviewed and updated at least annually?",
+    ["How often is InfoSec policy reviewed?"],
+    ["policy review cycle"], [F_SIG, F_CAIQ], "Y",
+    "The Information Security Policy is reviewed on an annual cycle; last reviewed {{LAST_REVIEWED}}. Ref: {{INFOSEC_POLICY}}, §{{SECTION}}.",
+    "Information Security Policy",
+    "Verify the document's actual version history/last-modified date supports the stated review cadence.")
+
+add("Security Policy & Governance",
+    "Does the organization have a designated individual responsible for information security (CISO, Security Officer, or equivalent)?",
+    ["Who owns security?"],
+    ["Security Officer", "CISO", "security ownership"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{NAME/TITLE}} is designated as Security Officer, responsible for the information security program. Ref: {{INFOSEC_POLICY}}, §{{SECTION}}.",
+    "Information Security Policy (role designation)",
+    "Use a title, not necessarily a name, if the client prefers not to name an individual in a document that may be forwarded externally.")
+
+add("Security Policy & Governance",
+    "Is there a documented acceptable use policy for company systems?",
+    ["Do you have an AUP?"],
+    ["acceptable use policy", "AUP"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains an Acceptable Use Policy covering company systems, signed by all employees at hire. Ref: {{AUP}}.",
+    "Acceptable Use Policy",
+    "Confirm signed acknowledgments are actually on file for current employees, not just that the policy document exists.")
+
+add("Security Policy & Governance",
+    "Do employees receive security awareness training upon hire and annually thereafter?",
+    ["Is security training provided?"],
+    ["security awareness training", "annual training"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Employees complete security awareness training ({{TRAINING_PLATFORM, e.g., KnowBe4}}) upon hire and annually; {{COMPLETION_RATE}}% completion as of {{DATE}}. Ref: {{TRAINING_LOG}}.",
+    "Security Awareness Training Log",
+    "Pull the actual completion report rather than stating 100% from memory — completion rates below 100% should be disclosed honestly with the gap noted.")
+
+add("Security Policy & Governance",
+    "Does the organization conduct a periodic (at least annual) formal risk assessment?",
+    ["Do you do annual risk assessments?"],
+    ["risk assessment", "security risk assessment"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} has not yet completed a formal, documented risk assessment; this is scheduled for {{TARGET_DATE}}.",
+    "Annual Risk Assessment Report",
+    "A common and understandable gap for early-stage companies; frame the remediation date concretely rather than vaguely — reviewers respond well to a committed date.")
+
+add("Security Policy & Governance",
+    "Is there a documented change management policy for production systems?",
+    ["How are production changes controlled?"],
+    ["change management", "change control"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} follows a documented change management process requiring {{REVIEW_MECHANISM, e.g., PR review and CI checks}} before production deployment. Ref: {{CHANGE_MGMT_POLICY}}.",
+    "Change Management Policy",
+    "Confirm the described process matches actual engineering practice (e.g., branch protection rules, required reviewers) — check the repo settings, not just the policy doc.")
+
+add("Security Policy & Governance",
+    "Does the organization have a formal exception process for policy deviations?",
+    ["How are policy exceptions handled?"],
+    ["policy exception process"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} handles policy deviations informally on a case-by-case basis; a documented exception process is planned, target {{TARGET_DATE}}.",
+    "Policy Exception Log & Procedure",
+    "Low-priority gap in most reviews; don't over-invest engineer time here relative to higher-impact items.")
+
+add("Security Policy & Governance",
+    "Is there a documented password policy meeting minimum complexity and rotation standards?",
+    ["What are your password requirements?"],
+    ["password policy", "password complexity"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} enforces a password policy requiring {{MIN_LENGTH}}+ characters{{AND/OR complexity rules}}, enforced via {{IDP, e.g., Okta}}. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "Identity & Access Management Policy",
+    "Note current NIST 800-63B guidance favors length over forced rotation — if the client has no forced rotation but strong length/MFA, frame that as a modern, defensible posture rather than a gap.")
+
+add("Security Policy & Governance",
+    "Has the organization completed a SOC 2 Type I or Type II audit, or a formal HITRUST assessment?",
+    ["Are you SOC 2 certified?", "Do you have a SOC 2 report?"],
+    ["SOC 2", "HITRUST", "attestation"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} {{has not yet completed / is pursuing}} a SOC 2 {{Type I/II}} audit; {{status, e.g., readiness assessment in progress}}, target completion {{TARGET_DATE}}.",
+    "SOC 2 Report (once completed)",
+    "Never claim SOC 2 status that hasn't actually been attested — this is one of the most-verified claims in enterprise security review; false claims here are reputationally severe.")
+
+add("Security Policy & Governance",
+    "Is there a documented governance structure (e.g., security steering committee) overseeing the security program?",
+    ["Who governs the security program?"],
+    ["security governance", "steering committee"], [F_SIG, F_CAIQ], "N",
+    "At {{COMPANY}}'s current size, security program oversight is handled directly by {{Security Officer / leadership}} rather than a formal committee structure.",
+    "Information Security Policy (governance section)",
+    "For small companies this is a reasonable and expected answer — frame it as right-sized governance rather than a deficiency.")
+
+add("Security Policy & Governance",
+    "Does the organization track and report security metrics (e.g., patch compliance, training completion, open vulnerabilities) to leadership?",
+    ["Do you report security KPIs?"],
+    ["security metrics", "KPI reporting"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not yet maintain a formal security metrics dashboard; this is planned as part of the SOC 2 readiness effort.",
+    "Security Metrics Dashboard / Report",
+    "Often bundled with the SOC 2 readiness gap — can be cited as part of the same remediation milestone rather than a separate line item.")
+
+# =====================================================================
+# ACCESS CONTROL / IAM (16)
+# =====================================================================
+add("Access Control",
+    "Is access to production systems granted based on least privilege / role-based access control (RBAC)?",
+    ["Do you use RBAC?"],
+    ["least privilege", "RBAC", "role-based access"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production access follows least-privilege RBAC. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "Identity & Access Management Policy",
+    "Pull an actual IAM role/permission export to confirm roles are scoped narrowly, not just that an RBAC framework exists on paper.")
+
+add("Access Control",
+    "Is multi-factor authentication (MFA) enforced for all remote/VPN access?",
+    ["Do you require MFA for remote access?"],
+    ["MFA", "remote access MFA", "VPN MFA"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "MFA is enforced for all remote/VPN access via {{IDP, e.g., Okta}}. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy / IdP enforcement report",
+    "Pull the IdP's MFA enforcement report to confirm 100% coverage, including any legacy accounts or service accounts that might be exempted.")
+
+add("Access Control",
+    "Is MFA enforced for access to production cloud infrastructure (AWS/Azure/GCP console)?",
+    ["Is cloud console access MFA-protected?"],
+    ["cloud console MFA", "AWS MFA"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "MFA is required for all access to {{CLOUD_PROVIDER}} via {{IDP}} SSO. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy / cloud IAM console screenshot",
+    "Check for any root/break-glass account that might not be covered by SSO-enforced MFA — that account needs its own hardware-key MFA at minimum.")
+
+add("Access Control",
+    "Is MFA enforced for access to the application containing PHI?",
+    ["Is MFA required to log into the product?"],
+    ["application MFA", "product login MFA"], [F_SIG, F_CUST], "Y",
+    "MFA is enforced for all user accounts accessing the {{PRODUCT_NAME}} application. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy / application auth configuration",
+    "Distinguish employee-facing MFA from customer/end-user-facing MFA in the answer — questionnaires sometimes mean one or the other specifically.")
+
+add("Access Control",
+    "Are user access rights reviewed on a periodic (at least quarterly) basis?",
+    ["Do you do access recertification?"],
+    ["access review", "access recertification"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} does not yet have a periodic access recertification process; access reviews have been reactive (triggered by role change or offboarding) rather than scheduled. Target for first formal review: {{TARGET_DATE}}.",
+    "Quarterly Access Recertification Log",
+    "Very common and very high-priority gap — this is one of the most-asked-about controls in enterprise review. Prioritize closing it early in any engagement.")
+
+add("Access Control",
+    "Is there a documented, timely offboarding procedure that revokes access upon termination?",
+    ["How fast is access revoked after termination?",
+     "What is your process for revoking system access when an employee leaves the company?"],
+    ["offboarding", "access revocation", "termination procedure", "employee offboarding", "staff departure"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Access is revoked within {{TIMEFRAME, e.g., 4 business hours}} of termination notice per {{OFFBOARDING_SOP}}.",
+    "Offboarding SOP",
+    "Ask for one real example (sanitized) of a recent offboarding timeline to back up the stated SLA — reviewers sometimes request evidence of actual execution, not just the procedure.")
+
+add("Access Control",
+    "Are privileged/administrative accounts separate from standard user accounts?",
+    ["Do admins use separate privileged accounts?"],
+    ["privileged account separation", "admin accounts"], [F_SIG, F_CAIQ], "Y",
+    "Privileged/administrative accounts are separate from standard user accounts; no shared root/admin credentials are used. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy",
+    "Confirm there's no shared root account still in casual use alongside individual admin accounts — a common partial-truth answer.")
+
+add("Access Control",
+    "Is shared or generic account usage prohibited, i.e., does each user have a unique ID?",
+    ["Are logins individually attributable?"],
+    ["unique user ID", "no shared accounts"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Each user has a unique account ID; shared/generic account usage is prohibited. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy",
+    "Check for exceptions like a shared support-inbox login or a shared service-desk tool account — these are easy to overlook and often technically violate this control.")
+
+add("Access Control",
+    "Is there a formal access request and approval workflow requiring manager/owner sign-off?",
+    ["How is new access granted?"],
+    ["access request workflow", "access approval"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "New access is granted through a documented request/approval workflow in {{TOOL, e.g., Jira}} requiring {{APPROVER, e.g., manager/data owner}} sign-off. Ref: {{ACCESS_REQUEST_SOP}}.",
+    "Access Request SOP",
+    "Confirm the workflow is actually used consistently, not bypassed informally for “quick” access grants — ask engineering directly about real practice.")
+
+add("Access Control",
+    "Are session timeouts enforced for applications handling PHI?",
+    ["Is there an idle session timeout?"],
+    ["session timeout", "idle timeout"], [F_SIG, F_CUST], "Y",
+    "Applications handling PHI enforce a {{TIMEOUT_MINUTES}}-minute idle session timeout. Ref: {{APP_SECURITY_STD}}, §{{SECTION}}.",
+    "Application Security Standard",
+    "Verify the actual configured value in the application, not the value stated in the policy document — these commonly drift apart.")
+
+add("Access Control",
+    "Is remote access to the corporate network restricted to company-managed/MDM-enrolled devices?",
+    ["Can personal devices access company systems remotely?"],
+    ["managed device requirement", "BYOD restriction"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently restrict remote access to MDM-enrolled devices; some staff access systems from unmanaged personal devices.",
+    "Mobile/Remote Access Device Policy (MDM-only enforcement)",
+    "Flag as Medium-High priority if PHI-handling applications are reachable from unmanaged devices — the risk level depends heavily on what's actually accessible.")
+
+add("Access Control",
+    "Does the organization log and actively monitor privileged account activity?",
+    ["Is admin activity monitored?"],
+    ["privileged activity monitoring", "admin audit logging"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "Privileged account activity is logged via {{LOGGING_TOOL}} but not actively monitored or alerted on in real time.",
+    "Privileged Access Monitoring & Alerting SOP",
+    "If logs exist but alerting doesn't, say so precisely — “we log it” and “we monitor it” are different claims and questionnaires often ask both.")
+
+add("Access Control",
+    "Is there a documented process for emergency (“break-glass”) access to production systems?",
+    ["How do you handle emergency access?"],
+    ["break-glass access", "emergency access"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not have a formally documented break-glass procedure; emergency access currently relies on {{existing admin accounts}}.",
+    "Break-Glass Access Procedure",
+    "Lower priority than the access-review and monitoring gaps above, but easy to remediate — can often be closed in the same sprint as the privileged-access-monitoring item.")
+
+add("Access Control",
+    "Are failed login attempts monitored and accounts locked out after a defined threshold?",
+    ["Is there account lockout on failed logins?"],
+    ["account lockout", "failed login monitoring"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Accounts lock out after {{N}} failed login attempts for {{DURATION}}. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy",
+    "Confirm the lockout is configured at the actual IdP/application level, not just described in policy.")
+
+add("Access Control",
+    "Is single sign-on (SSO) used to centralize authentication across company applications?",
+    ["Do you use SSO?"],
+    ["single sign-on", "SSO", "identity provider"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} centralizes authentication via {{IDP, e.g., Okta/Google Workspace}} SSO across {{N}} integrated applications.",
+    "IAM Policy / IdP application list",
+    "List which critical applications are NOT yet behind SSO (common gap for newer SaaS tools adopted outside IT's review) — this nuance matters to reviewers.")
+
+add("Access Control",
+    "Does the organization enforce the principle of segregation of duties for sensitive functions (e.g., code deployment vs. code review, financial approval)?",
+    ["Is segregation of duties enforced?"],
+    ["segregation of duties", "separation of duties"], [F_SIG, F_CAIQ], "N",
+    "At {{COMPANY}}'s current team size, full segregation of duties is partially implemented (e.g., {{required PR approval before merge}}) but not comprehensive across all sensitive functions.",
+    "Change Management Policy / IAM Policy",
+    "Small teams genuinely can't fully segregate every duty — be honest about this and highlight the compensating controls that do exist (e.g., required code review) rather than overclaiming.")
+
+add("Access Control",
+    "Are third-party/vendor personnel granted access to production systems subject to the same access control requirements as employees?",
+    ["Do contractors get the same access controls as staff?"],
+    ["contractor access", "vendor personnel access"], [F_SIG, F_CAIQ], "Y",
+    "Third-party personnel with production access are subject to the same {{IAM_POLICY}} requirements as employees, including MFA, unique accounts, and offboarding revocation.",
+    "IAM Policy / Vendor Access Log",
+    "Confirm this applies in practice to any contractors the client currently uses — verify at least one real example rather than answering from policy alone.")
+
+# =====================================================================
+# APPLICATION SECURITY (12)
+# =====================================================================
+add("Application Security",
+    "Does the organization follow a secure software development lifecycle (SSDLC)?",
+    ["Is there a secure SDLC?"],
+    ["SSDLC", "secure development lifecycle"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} follows a documented SSDLC including {{PR review, automated testing, security review at design stage}}. Ref: {{SSDLC_POLICY}}.",
+    "SSDLC Policy",
+    "Confirm the described steps are actually enforced via tooling (required reviewers, CI gates), not just written as aspirational policy.")
+
+add("Application Security",
+    "Is static application security testing (SAST) performed on the codebase?",
+    ["Do you run SAST?"],
+    ["SAST", "static analysis"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} does not yet run automated SAST tooling; code review is manual. SAST tool evaluation is {{planned / in progress}}.",
+    "SAST Tool Configuration / CI Pipeline",
+    "A fast, cheap remediation — free/low-cost SAST tools (e.g., Semgrep, GitHub CodeQL) can often be stood up within days, which makes this a good early-win gap to close.")
+
+add("Application Security",
+    "Is dynamic application security testing (DAST) or penetration testing performed on the production application?",
+    ["Do you do pen testing?"],
+    ["DAST", "penetration test", "pen test"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} has not yet performed a formal third-party penetration test; one is {{scheduled for / being scoped for}} {{TARGET_DATE}}.",
+    "Penetration Test Report (once completed)",
+    "This is one of the most frequently requested artifacts in enterprise deals. If a pen test genuinely hasn't happened, this should usually be a High-priority Gap Register item.")
+
+add("Application Security",
+    "Does the organization have a documented vulnerability management / patch management process?",
+    ["How do you manage vulnerabilities and patches?"],
+    ["vulnerability management", "patch management"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} follows a vulnerability management process with remediation SLAs of {{CRITICAL_SLA}} for critical and {{HIGH_SLA}} for high findings. Ref: {{VULN_MGMT_POLICY}}.",
+    "Vulnerability Management Policy",
+    "Confirm actual SLA adherence with a recent example, not just the stated target — reviewers sometimes ask for evidence of SLA tracking.")
+
+add("Application Security",
+    "Are dependencies/third-party libraries scanned for known vulnerabilities (SCA)?",
+    ["Do you scan dependencies?"],
+    ["SCA", "software composition analysis", "dependency scanning"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Dependencies are scanned via {{TOOL, e.g., Dependabot/Snyk}} with automated pull requests for vulnerable packages.",
+    "CI Pipeline Configuration / Dependabot settings",
+    "Verify the scanning tool is actually enabled on the production repo, not just available on the GitHub org — check repo settings directly.")
+
+add("Application Security",
+    "Is there a formal code review requirement before production deployment?",
+    ["Is code review required?"],
+    ["code review", "peer review requirement"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "All code changes require at least {{N}} reviewer approval before merge to production. Ref: {{CHANGE_MGMT_POLICY}} / branch protection settings.",
+    "Change Management Policy / GitHub branch protection rules",
+    "Pull the actual branch protection configuration to confirm required reviewers are enforced technically, not just as a team norm.")
+
+add("Application Security",
+    "Does the organization maintain separate development, staging, and production environments?",
+    ["Are environments separated?"],
+    ["environment separation", "dev/staging/prod"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains logically and technically separated dev, staging, and production environments with separate credentials and network boundaries.",
+    "Infrastructure Architecture Diagram",
+    "Confirm separation is enforced at the credential/network level, not just naming convention — e.g., are staging and prod using fully separate database instances and IAM roles?")
+
+add("Application Security",
+    "Is input validation and output encoding implemented to prevent injection attacks (SQL injection, XSS, etc.)?",
+    ["How do you prevent injection attacks?"],
+    ["input validation", "SQL injection", "XSS prevention"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}}'s application uses {{FRAMEWORK, e.g., parameterized queries via ORM}} and output encoding to mitigate injection vulnerabilities.",
+    "Application Security Standard",
+    "If a DAST/pen test has been performed, cite any specific findings and their remediation status rather than giving a generic framework-level answer.")
+
+add("Application Security",
+    "Is the production application protected by a web application firewall (WAF)?",
+    ["Do you use a WAF?"],
+    ["WAF", "web application firewall"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "The production application is protected by {{WAF_PRODUCT, e.g., AWS WAF/Cloudflare}} with {{managed rule sets}} enabled.",
+    "Infrastructure Architecture Diagram / WAF console export",
+    "Confirm the WAF is actually in blocking mode, not just logging/monitoring mode — a common partial-deployment gap.")
+
+add("Application Security",
+    "Does the organization have a documented API security standard covering authentication, rate limiting, and authorization for all exposed APIs?",
+    ["How are your APIs secured?"],
+    ["API security", "rate limiting", "API authentication"], [F_SIG, F_CAIQ], "Y",
+    "APIs require {{AUTH_METHOD, e.g., OAuth 2.0 bearer tokens}}, enforce rate limiting, and apply per-tenant authorization checks. Ref: {{API_SECURITY_STD}}.",
+    "API Security Standard",
+    "If the client has customer-facing/partner APIs, verify authorization checks prevent cross-tenant data access specifically — this is the most common serious API flaw (IDOR/BOLA).")
+
+add("Application Security",
+    "Is a responsible disclosure / bug bounty program in place for reporting security vulnerabilities?",
+    ["Do you have a vulnerability disclosure program?"],
+    ["responsible disclosure", "bug bounty", "VDP"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently operate a formal bug bounty program; a lightweight responsible-disclosure policy/security.txt {{is planned / exists}} for external reports.",
+    "Responsible Disclosure Policy / security.txt",
+    "Low-cost remediation — publishing a security.txt file with a contact email can close this gap in under a day and is worth doing even before a full bug bounty program.")
+
+add("Application Security",
+    "Are secrets (API keys, credentials) excluded from source control via secret-scanning and .gitignore practices?",
+    ["Do you scan for leaked secrets in your repos?"],
+    ["secret scanning", "credential leakage"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} uses {{TOOL, e.g., GitHub secret scanning/GitGuardian}} to detect committed secrets, in addition to .gitignore conventions.",
+    "CI Pipeline Configuration / secret-scanning alerts",
+    "Confirm GitHub secret scanning (or equivalent) is actually enabled on private repos — it's off by default on some plans and easy to assume incorrectly.")
+
+# =====================================================================
+# CRYPTOGRAPHY (8)
+# =====================================================================
+add("Cryptography",
+    "Does the organization have a documented cryptographic/encryption standard specifying approved algorithms and key lengths?",
+    ["What encryption standards do you follow?"],
+    ["encryption standard", "approved algorithms"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains an Encryption Standard specifying approved algorithms (e.g., AES-256, TLS 1.2+) and key lengths. Ref: {{ENCRYPTION_STD}}.",
+    "Encryption Standard",
+    "Confirm the standard excludes deprecated algorithms (e.g., SHA-1, TLS 1.0/1.1, DES) explicitly, not just by omission.")
+
+add("Cryptography",
+    "Is there a documented key management process (generation, rotation, storage, destruction)?",
+    ["How do you manage encryption keys?"],
+    ["key management", "key rotation"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Encryption keys are managed via {{KMS_PRODUCT, e.g., AWS KMS}} with {{ROTATION_FREQUENCY}} rotation. Ref: {{ENCRYPTION_STD}}, §{{SECTION}}.",
+    "Encryption Standard / KMS configuration",
+    "Verify automatic key rotation is actually enabled in the KMS console (it's often off by default) before citing a rotation frequency.")
+
+add("Cryptography",
+    "Are cryptographic keys stored separately from the data they protect?",
+    ["Is key storage separated from encrypted data?"],
+    ["key separation", "key storage"], [F_SIG, F_CAIQ], "Y",
+    "Cryptographic keys are managed by {{KMS_PRODUCT}}, logically and administratively separate from the encrypted data stores.",
+    "Encryption Standard",
+    "Generally true by default for cloud-managed KMS; confirm there are no self-managed keys stored alongside data as an exception.")
+
+add("Cryptography",
+    "Does the organization use industry-standard, vetted cryptographic libraries rather than custom/home-grown cryptography?",
+    ["Do you roll your own crypto?"],
+    ["custom cryptography", "cryptographic libraries"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}} relies exclusively on vetted libraries/platform-native cryptography (e.g., cloud provider SDKs, OpenSSL); no custom cryptographic algorithms are implemented.",
+    "Application Security Standard",
+    "This should almost always be Yes for a well-run engineering org — if a legacy custom encryption routine exists anywhere, flag it as a High-priority finding, as custom crypto is a serious red flag to reviewers.")
+
+add("Cryptography",
+    "Is TLS/SSL certificate management automated, with monitoring for upcoming expirations?",
+    ["How do you manage SSL certs?"],
+    ["certificate management", "cert expiration monitoring"], [F_SIG, F_CUST], "Y",
+    "TLS certificates are managed via {{CERT_PROVIDER, e.g., AWS Certificate Manager/Let's Encrypt}} with automatic renewal and expiration monitoring.",
+    "Infrastructure Architecture Diagram",
+    "Confirm renewal is actually automatic, not just “monitored” with manual renewal — manual renewal processes are a common source of unplanned outages.")
+
+add("Cryptography",
+    "Is encryption applied to data transmitted between internal microservices, not just external-facing traffic?",
+    ["Is internal/east-west traffic encrypted?"],
+    ["internal encryption", "service-to-service encryption", "east-west traffic"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}}'s internal service-to-service traffic currently relies on {{VPC network isolation}} rather than end-to-end TLS between services; mutual TLS is {{planned / under evaluation}}.",
+    "Infrastructure Architecture Diagram",
+    "A nuanced answer — network-layer isolation (VPC, security groups) is a legitimate compensating control even without service-mesh mTLS; explain both rather than giving a flat No with no context.")
+
+add("Cryptography",
+    "Are hardware security modules (HSMs) or equivalent used for high-sensitivity key operations?",
+    ["Do you use HSMs?"],
+    ["HSM", "hardware security module"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} relies on {{CLOUD_PROVIDER}}'s managed KMS rather than a dedicated HSM; this is generally appropriate given current scale and data sensitivity.",
+    "Encryption Standard",
+    "A cloud-managed KMS is an acceptable and common answer at this company stage — don't overstate this as a gap unless the client's contracts specifically require HSM-backed keys.")
+
+add("Cryptography",
+    "Does the organization have a documented process for responding to cryptographic algorithm deprecation or key compromise?",
+    ["What happens if a key is compromised or an algorithm is deprecated?"],
+    ["key compromise response", "algorithm deprecation"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not have a formal, separately documented key-compromise response procedure; this scenario would currently be handled under the general Incident Response Plan.",
+    "Incident Response Plan (crypto-specific addendum)",
+    "Usually acceptable to answer that this scenario is covered under the general IR plan rather than requiring a wholly separate document — note that framing in the answer.")
+
+# =====================================================================
+# NETWORK SECURITY (10)
+# =====================================================================
+add("Network Security",
+    "Does the organization use network segmentation to isolate production systems from corporate/office networks?",
+    ["Is production network segmented?"],
+    ["network segmentation", "production isolation"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production infrastructure runs in an isolated {{VPC_PRODUCT, e.g., AWS VPC}} separate from the corporate office network. Ref: {{INFRA_ARCH_DIAGRAM}}.",
+    "Infrastructure Architecture Diagram",
+    "Confirm there's no administrative path from the office network directly into production that bypasses the VPN/SSO/MFA controls.")
+
+add("Network Security",
+    "Is a firewall or equivalent (security groups, NACLs) used to restrict inbound/outbound traffic to production systems?",
+    ["Are firewalls configured on production?"],
+    ["firewall", "security groups", "network ACLs"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production systems are protected by {{CLOUD_PROVIDER}} security groups configured on a default-deny, least-privilege basis.",
+    "Infrastructure Architecture Diagram / security group export",
+    "Pull the actual security group rules to confirm no overly broad rules (e.g., 0.0.0.0/0 on a database port) exist before citing least-privilege.")
+
+add("Network Security",
+    "Is intrusion detection/prevention (IDS/IPS) deployed on production networks?",
+    ["Do you have IDS/IPS?"],
+    ["IDS", "IPS", "intrusion detection"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently run a dedicated IDS/IPS; network-level anomaly detection is {{planned / provided in part by cloud-native tooling, e.g., GuardDuty}}.",
+    "Logging Standard / security tooling configuration",
+    "If a cloud-native threat detection service (e.g., AWS GuardDuty) is enabled, cite that as meaningful partial coverage rather than a flat No.")
+
+add("Network Security",
+    "Does the organization use a VPN or zero-trust network access (ZTNA) solution for remote access to internal resources?",
+    ["How do remote employees access internal systems?"],
+    ["VPN", "zero trust", "ZTNA"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Remote access to internal resources requires {{VPN_PRODUCT / ZTNA_PRODUCT}} with MFA enforced. Ref: {{IAM_POLICY}}, §{{SECTION}}.",
+    "IAM Policy",
+    "Confirm whether this is a traditional VPN or SSO-gated SaaS access (many modern stacks don't use a traditional VPN at all) — answer to match the actual architecture.")
+
+add("Network Security",
+    "Is DDoS protection in place for internet-facing services?",
+    ["Do you have DDoS mitigation?"],
+    ["DDoS protection"], [F_SIG, F_CAIQ], "Y",
+    "Internet-facing services are protected by {{PROVIDER, e.g., AWS Shield/Cloudflare}} DDoS mitigation.",
+    "Infrastructure Architecture Diagram",
+    "Basic-tier DDoS protection (e.g., AWS Shield Standard) is included by default on most cloud platforms — confirm which tier is active and note it accurately rather than implying an advanced paid tier if only the free tier is active.")
+
+add("Network Security",
+    "Are production network configurations reviewed periodically for unnecessary open ports or overly permissive rules?",
+    ["Do you audit firewall rules?"],
+    ["network configuration review", "firewall audit"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not yet have a scheduled periodic review of network/security group configurations; reviews currently occur only during incident response or architecture changes.",
+    "Change Management Policy",
+    "A quick, high-value remediation — even a quarterly manual review checklist closes this gap with minimal tooling investment.")
+
+add("Network Security",
+    "Is wireless network access (if applicable) secured with enterprise-grade authentication (e.g., WPA2/3-Enterprise, not a shared PSK)?",
+    ["How is office Wi-Fi secured?"],
+    ["Wi-Fi security", "WPA2-Enterprise"], [F_SIG, F_CAIQ], "Y",
+    "Office Wi-Fi uses {{WPA2/3-Enterprise}} authentication tied to {{IDP}}; guest network is logically separated from the corporate network.",
+    "Information Security Policy",
+    "If the office is fully remote with no physical location, note that explicitly — this question may not apply and should be answered “N/A — remote-first organization” rather than forced into Yes/No.")
+
+add("Network Security",
+    "Does the organization log and retain network traffic/flow logs for production environments?",
+    ["Do you keep network flow logs?"],
+    ["flow logs", "network traffic logging"], [F_SIG, F_CAIQ], "Y",
+    "{{CLOUD_PROVIDER}} VPC flow logs are enabled for production, retained for {{RETENTION_PERIOD}}. Ref: {{LOGGING_STANDARD}}, §{{SECTION}}.",
+    "Logging Standard",
+    "Confirm flow logs are actually enabled at the VPC level in the console, not just assumed to be on by default (they are not on by default on most cloud platforms).")
+
+add("Network Security",
+    "Are default/vendor-supplied credentials changed on all network devices and infrastructure components prior to production use?",
+    ["Are default passwords changed?"],
+    ["default credentials", "vendor default passwords"], [F_SIG, F_CAIQ], "Y",
+    "Default/vendor-supplied credentials are changed prior to any device or service entering production, per {{PROVISIONING_SOP}}.",
+    "Asset Decommissioning SOP / provisioning checklist",
+    "For a cloud-native company with no physical network hardware, note that this control applies primarily to {{managed service default settings}} rather than physical devices.")
+
+add("Network Security",
+    "Is outbound traffic from production systems restricted/monitored to detect potential data exfiltration?",
+    ["Do you monitor outbound traffic?"],
+    ["egress monitoring", "data exfiltration detection"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} restricts outbound traffic via security group egress rules but does not yet have dedicated exfiltration-detection monitoring/alerting.",
+    "Logging Standard / Privileged Access Monitoring SOP",
+    "This pairs naturally with the privileged-access-monitoring gap in Access Control — often makes sense to remediate both together as part of the same monitoring/alerting buildout.")
+
+# =====================================================================
+# ENDPOINT SECURITY (8)
+# =====================================================================
+add("Endpoint Security",
+    "Is endpoint detection and response (EDR) or antivirus software deployed on all company-managed endpoints?",
+    ["Do you run EDR/antivirus?"],
+    ["EDR", "antivirus", "endpoint protection"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{EDR_PRODUCT, e.g., CrowdStrike/Microsoft Defender}} is deployed on all company-managed endpoints via {{MDM_PRODUCT}} enforcement.",
+    "MDM Enrollment Policy / EDR console coverage report",
+    "Pull the EDR console's actual coverage percentage rather than assuming 100% — unenrolled or stale agents are common.")
+
+add("Endpoint Security",
+    "Are operating system and application security patches applied within a defined SLA?",
+    ["What is your patching SLA?"],
+    ["patch SLA", "patching cadence"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "OS and application patches are applied within {{SLA, e.g., 30 days for critical/high}} per {{VULN_MGMT_POLICY}}, enforced via {{MDM_PRODUCT}} auto-update policy.",
+    "Vulnerability Management Policy / MDM patch compliance report",
+    "Verify against an actual patch-compliance report; “auto-update is enabled” and “patches are actually current” are not the same claim.")
+
+add("Endpoint Security",
+    "Is screen lock with a defined timeout enforced on all company-managed endpoints?",
+    ["Is there a screen lock policy?"],
+    ["screen lock", "auto-lock timeout"], [F_SIG, F_CAIQ], "Y",
+    "Endpoints enforce auto-lock after {{TIMEOUT_MINUTES}} minutes of inactivity via {{MDM_PRODUCT}} policy.",
+    "Endpoint Security Policy",
+    "Quick to verify directly in the MDM policy configuration — low effort, worth confirming precisely rather than estimating.")
+
+add("Endpoint Security",
+    "Are employees prohibited from installing unauthorized/unapproved software on company-managed endpoints?",
+    ["Is software installation restricted?"],
+    ["unauthorized software", "application allowlisting"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not currently technically restrict software installation; this is addressed by policy (Acceptable Use Policy) rather than technical control.",
+    "Acceptable Use Policy / MDM application policy",
+    "Full application allowlisting is often disproportionate for a small engineering-heavy team — frame the policy-based control honestly as a lighter-weight but real compensating measure.")
+
+add("Endpoint Security",
+    "Is mobile application management (MAM) or containerization used to separate work and personal data on BYOD devices?",
+    ["How is BYOD data separated?"],
+    ["MAM", "BYOD containerization"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently use MAM/containerization for BYOD; {{if applicable: BYOD access is limited to email/calendar via MDM, with PHI-handling applications restricted to managed devices only}}.",
+    "MDM Enrollment Policy",
+    "Confirm what BYOD devices can actually reach — if PHI applications are genuinely restricted to managed devices only, that's a meaningful compensating control worth stating explicitly.")
+
+add("Endpoint Security",
+    "Does the organization maintain the ability to remotely wipe company data from lost or stolen devices?",
+    ["Can you remote-wipe a lost device?"],
+    ["remote wipe", "lost device procedure"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{MDM_PRODUCT}} supports remote wipe of company-managed endpoints; procedure documented in {{ASSET_DECOMM_SOP}} / Offboarding SOP.",
+    "MDM Enrollment Policy",
+    "Confirm this has actually been exercised at least once, even in a test, so the answer isn't purely theoretical.")
+
+add("Endpoint Security",
+    "Are USB/peripheral device controls enforced to prevent unauthorized data transfer?",
+    ["Is peripheral device use restricted?"],
+    ["peripheral control", "USB device control"], [F_SIG, F_CAIQ], "Y",
+    "Peripheral device access is restricted via {{MDM_PRODUCT}} device control policy. Ref: {{ENDPOINT_SECURITY_POLICY}}, §{{SECTION}}.",
+    "Endpoint Security Policy",
+    "Same underlying control as the Asset Management “removable media” question — keep the two answers consistent if both appear in the same questionnaire.")
+
+add("Endpoint Security",
+    "Is there a process to verify endpoint compliance (encryption, patch level, EDR status) before granting network/application access?",
+    ["Do you check device health before granting access?"],
+    ["device compliance check", "conditional access"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not currently enforce device-compliance-based conditional access; MFA and SSO are enforced, but device health posture is not yet a gating factor.",
+    "IAM Policy / conditional access configuration",
+    "Many modern IdPs (Okta, Entra ID) support this as a configuration toggle rather than a new tool purchase — flag as a relatively quick win if the client's IdP already supports it.")
+
+# =====================================================================
+# INCIDENT MANAGEMENT (12)
+# =====================================================================
+add("Incident Management",
+    "Does the organization maintain a documented security incident response plan?",
+    ["Do you have an IR plan?"],
+    ["incident response plan", "IR plan"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a documented Incident Response Plan. Ref: {{IR_PLAN}}.",
+    "Incident Response Plan",
+    "Confirm the plan is current (reflects the actual current team/tools), not a template that was never updated after initial creation.")
+
+add("Incident Management",
+    "Is the incident response plan tested via tabletop exercise or similar at least annually?",
+    ["Do you run IR tabletop exercises?"],
+    ["tabletop exercise", "IR plan testing"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}}'s IR plan has not yet been exercised via tabletop simulation; one is scheduled for {{TARGET_DATE}}.",
+    "Tabletop Exercise After-Action Report",
+    "A relatively cheap remediation — a 90-minute internal tabletop with a written after-action summary is often sufficient to close this gap.")
+
+add("Incident Management",
+    "Is there a designated incident response team with defined roles and responsibilities?",
+    ["Who is on the IR team?"],
+    ["IR team", "incident roles"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}}'s Incident Response Plan defines team roles including {{Incident Commander, Technical Lead, Communications Lead}}. Ref: {{IR_PLAN}}, §{{SECTION}}.",
+    "Incident Response Plan",
+    "Confirm named individuals/roles are current staff, not placeholder names left over from an earlier template.")
+
+add("Incident Management",
+    "Does the organization have a documented breach notification procedure consistent with the HIPAA Breach Notification Rule (45 CFR §§ 164.400–414) timelines?",
+    ["How do you handle HIPAA breach notification?"],
+    ["breach notification", "HIPAA breach rule"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}} maintains a Breach Notification SOP aligned to the HIPAA Breach Notification Rule's notification timelines. Ref: {{BREACH_NOTIFICATION_SOP}}.",
+    "Breach Notification SOP",
+    "Never characterize this as a legal compliance guarantee — frame as “aligned to” the rule's timelines, and note that legal counsel makes the actual breach determination.")
+
+add("Incident Management",
+    "Is there defined, continuous monitoring and alerting for security events on production systems?",
+    ["Do you have 24/7 monitoring?"],
+    ["security monitoring", "SOC", "alerting"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} collects logs centrally via {{LOGGING_TOOL}} but does not yet have continuous automated alerting; monitoring is currently {{business-hours / reactive}}.",
+    "Security Monitoring & Alerting Runbook",
+    "High-priority gap for any PHI-handling company. If budget allows, a managed detection service or basic alerting rules (e.g., CloudWatch alarms, GuardDuty findings to Slack) is a fast partial fix.")
+
+add("Incident Management",
+    "Does the organization maintain centralized logging for production systems (application, infrastructure, and access logs)?",
+    ["Do you centralize logs?"],
+    ["centralized logging", "log aggregation"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} centralizes application, infrastructure, and access logs via {{LOGGING_TOOL, e.g., CloudWatch}}. Ref: {{LOGGING_STANDARD}}.",
+    "Logging Standard",
+    "Confirm all three log categories (application, infra, access) actually flow into the central system — partial coverage is common (e.g., infra logs centralized but application logs are not).")
+
+add("Incident Management",
+    "Are logs retained for a minimum of one year, or per applicable regulatory requirement?",
+    ["What is your log retention period?"],
+    ["log retention"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Logs are retained for {{RETENTION_PERIOD, e.g., 13 months}} per {{LOGGING_STANDARD}}, §{{SECTION}}.",
+    "Logging Standard",
+    "Check the actual configured retention setting in the logging tool, since default retention periods (often 30–90 days) frequently fall short of policy unless explicitly changed.")
+
+add("Incident Management",
+    "Is there a documented process for notifying affected customers/business associates in the event of a breach involving their data?",
+    ["How do you notify customers of a breach?"],
+    ["customer breach notification", "business associate notification"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}}'s Breach Notification SOP includes a customer/business-associate notification procedure with target notification timelines of {{TIMEFRAME}}. Ref: {{BREACH_NOTIFICATION_SOP}}, §{{SECTION}}.",
+    "Breach Notification SOP",
+    "Confirm this timeline matches whatever is contractually committed in the client's customer agreements/BAAs — inconsistency between the two documents is a red flag reviewers specifically look for.")
+
+add("Incident Management",
+    "Has the organization experienced a reportable security incident or breach in the past 12 months?",
+    ["Have you had any breaches?"],
+    ["incident history", "breach history"], [F_SIG, F_CAIQ, F_CUST], "N/A",
+    "{{Answer per the client's actual Incident Log — do not default this answer. If zero: “No reportable incidents in the past 12 months per {{INCIDENT_LOG}}.” If one occurred: disclose per the client's legal counsel's guidance.}}",
+    "Incident Log",
+    "NEVER answer this from a template default. This must be pulled from the client's actual incident log and, if any incident occurred, reviewed with the client (and their counsel, if appropriate) before disclosure.")
+
+add("Incident Management",
+    "Is there a post-incident review / lessons-learned process?",
+    ["Do you do post-mortems after incidents?"],
+    ["post-incident review", "lessons learned", "post-mortem"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}}'s Incident Response Plan includes a post-incident review step to capture lessons learned and corrective actions. Ref: {{IR_PLAN}}, §{{SECTION}}.",
+    "Incident Response Plan",
+    "If no real incident has occurred yet, note that the process exists but hasn't been exercised — don't imply it's been used if it hasn't.")
+
+add("Incident Management",
+    "Does the organization maintain cyber liability / technology errors & omissions (E&O) insurance?",
+    ["Do you have cyber insurance?"],
+    ["cyber insurance", "E&O insurance", "tech E&O"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} {{is finalizing / has not yet bound}} cyber liability coverage; policy binding targeted for {{TARGET_DATE}}.",
+    "Cyber Liability / Tech E&O Insurance Certificate",
+    "This is a hard requirement before taking on a third client per the engagement's own guardrails — treat this gap as High priority both for the client and as a personal operating requirement.")
+
+add("Incident Management",
+    "Is there a defined escalation path to executive leadership for high-severity incidents?",
+    ["How are execs notified during a major incident?"],
+    ["executive escalation", "incident severity escalation"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}}'s Incident Response Plan defines escalation to {{CEO/leadership}} for Severity {{1/High}} incidents within {{TIMEFRAME}}. Ref: {{IR_PLAN}}, §{{SECTION}}.",
+    "Incident Response Plan",
+    "Verify severity thresholds are actually defined with concrete criteria, not just “serious incidents get escalated” with no operational definition of “serious.”")
+
+# =====================================================================
+# BUSINESS CONTINUITY & DISASTER RECOVERY (8)
+# =====================================================================
+add("Business Continuity",
+    "Does the organization maintain a documented business continuity / disaster recovery (BC/DR) plan?",
+    ["Do you have a BC/DR plan?"],
+    ["business continuity plan", "disaster recovery plan"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a Business Continuity & DR Plan. Ref: {{BCDR_PLAN}}.",
+    "Business Continuity & DR Plan",
+    "Confirm the plan reflects current infrastructure (e.g., current cloud provider/region), not an earlier architecture.")
+
+add("Business Continuity",
+    "Is the BC/DR plan tested at least annually?",
+    ["Do you test your DR plan?"],
+    ["DR testing", "failover test"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}}'s BC/DR plan has not yet been formally tested; a test is scheduled for {{TARGET_DATE}}.",
+    "BC/DR Tabletop Test Report",
+    "Can often be combined with the IR tabletop exercise into a single testing cadence/calendar to reduce overhead for a small team.")
+
+add("Business Continuity",
+    "Are production database backups performed on a defined schedule (e.g., daily)?",
+    ["How often are backups taken?"],
+    ["backup schedule", "backup frequency"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production databases are backed up {{FREQUENCY, e.g., daily}} via automated {{BACKUP_MECHANISM, e.g., snapshot}}. Ref: {{BACKUP_POLICY}}, §{{SECTION}}.",
+    "Backup & Recovery Policy",
+    "Confirm the automated schedule is actually active in the cloud console, and check the most recent successful backup timestamp before citing this as current.")
+
+add("Business Continuity",
+    "Are backups tested for restorability on a periodic basis?",
+    ["Do you test restoring from backup?"],
+    ["backup restoration test", "restore test"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} has not formally tested backup restoration within the past 12 months; a restore test is scheduled for {{TARGET_DATE}}.",
+    "Backup Restoration Test Report",
+    "High-value, often-overlooked gap — an untested backup is not a reliable recovery capability. Worth prioritizing even above some access-control gaps if the client has never actually restored from backup.")
+
+add("Business Continuity",
+    "Does the organization have a defined Recovery Time Objective (RTO) and Recovery Point Objective (RPO)?",
+    ["What are your RTO/RPO targets?"],
+    ["RTO", "RPO", "recovery objectives"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} has defined an RTO of {{RTO_VALUE}} and an RPO of {{RPO_VALUE}}. Ref: {{BCDR_PLAN}}, §{{SECTION}}.",
+    "Business Continuity & DR Plan",
+    "Make sure the stated RTO/RPO is realistic given actual backup frequency and infrastructure — an RPO of 1 hour is not credible if backups only run daily.")
+
+add("Business Continuity",
+    "Is production infrastructure deployed across multiple availability zones/regions to support failover?",
+    ["Is your infrastructure multi-AZ?"],
+    ["multi-AZ", "high availability", "failover architecture"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "Production infrastructure is deployed across multiple availability zones within {{CLOUD_REGION}}. Ref: {{INFRA_ARCH_DIAGRAM}}.",
+    "Infrastructure Architecture Diagram",
+    "Distinguish multi-AZ (same region, different data centers) from multi-region in the answer — questionnaires sometimes specifically ask about multi-region and the two are not the same claim.")
+
+add("Business Continuity",
+    "Does the organization maintain an alternate communication plan for use during an outage or incident?",
+    ["How do you communicate during an outage?"],
+    ["alternate communications", "outage communication plan"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not have a documented out-of-band communication plan for use if primary channels (e.g., Slack, email) are unavailable during an incident.",
+    "Alternate Communications Plan",
+    "Low-cost fix — typically just needs a documented backup channel (e.g., a phone tree or a secondary tool like SMS/WhatsApp group) and a line in the IR plan.")
+
+add("Business Continuity",
+    "Is there a documented succession plan for key personnel (e.g., Security Officer, CTO)?",
+    ["What happens if a key person leaves or is unavailable?"],
+    ["succession plan", "key person risk"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not currently maintain a formal succession plan for key security/technical roles given its current team size.",
+    "Key Personnel Succession Plan",
+    "For a company under ~20 people, this is a defensible and common gap — frame it as proportionate to current scale rather than a serious deficiency, while still logging a target remediation date.")
+
+# =====================================================================
+# THIRD-PARTY / VENDOR RISK MANAGEMENT (14)
+# =====================================================================
+add("Third-Party Risk Management",
+    "Does the organization maintain an inventory of all third-party vendors/subprocessors with access to PHI or company systems?",
+    ["Do you have a vendor/subprocessor inventory?"],
+    ["subprocessor inventory", "vendor inventory"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} maintains a Subprocessor Register listing all vendors with access to PHI or company systems. Ref: {{SUBPROCESSOR_REGISTER}}.",
+    "Subprocessor Register",
+    "Cross-check this register against the actual OAuth-connected apps in Google Workspace/M365 admin console — the two often don't fully match, which is itself a finding worth noting.")
+
+add("Third-Party Risk Management",
+    "Are Business Associate Agreements (BAAs) executed with all subprocessors that handle PHI?",
+    ["Do all your vendors have BAAs?"],
+    ["BAA", "business associate agreement"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{N_MISSING}} of {{N_TOTAL}} subprocessors handling PHI do not yet have an executed BAA on file; outstanding BAAs are being pursued, target {{TARGET_DATE}}.",
+    "Vendor BAA Tracker",
+    "High-priority gap whenever it exists — missing BAAs with PHI-touching vendors are one of the most material findings in a HIPAA-context review. Name the specific missing vendors internally even if not in the external-facing answer.")
+
+add("Third-Party Risk Management",
+    "Is there a vendor risk assessment performed prior to onboarding a new vendor?",
+    ["Do you vet vendors before onboarding?"],
+    ["vendor risk assessment", "vendor onboarding review"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} does not yet have a formal pre-onboarding vendor risk assessment process; vendor selection is currently led by {{the requesting team / engineering}} without a standardized review.",
+    "Vendor Risk Assessment SOP",
+    "A lightweight intake questionnaire (5–10 questions covering data access, BAA need, SOC 2 status) is usually sufficient to close this gap without heavy process overhead.")
+
+add("Third-Party Risk Management",
+    "Does the organization review vendor SOC 2 reports or equivalent security attestations prior to engagement?",
+    ["Do you review vendor SOC 2 reports?"],
+    ["vendor SOC 2 review", "vendor attestation review"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} does not consistently collect or review vendor SOC 2 reports prior to engagement; this is being incorporated into the forthcoming vendor risk assessment process.",
+    "Vendor Security Attestation Collection Log",
+    "Usually bundled with the vendor-risk-assessment gap above — remediate together as one process rather than two separate initiatives.")
+
+add("Third-Party Risk Management",
+    "Is a documented subprocessor list made available to customers (e.g., in a DPA or published list)?",
+    ["Can your customers see your subprocessor list?"],
+    ["published subprocessor list", "subprocessor disclosure"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} publishes its subprocessor list at {{URL}} / includes it as an exhibit to its standard DPA. Ref: {{SUBPROCESSOR_REGISTER}}.",
+    "Subprocessor Register (published)",
+    "If not yet published externally, note that internally it exists and can be shared on request — that's a meaningfully different (and defensible) answer than “we don't track this.”")
+
+add("Third-Party Risk Management",
+    "Are vendors contractually required to notify the organization of a security incident affecting shared data?",
+    ["Do vendor contracts require breach notification to you?"],
+    ["vendor incident notification clause"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}}'s standard vendor agreement includes an incident notification clause requiring vendors to notify within {{TIMEFRAME}}. Ref: {{VENDOR_AGREEMENT_TEMPLATE}}, §{{SECTION}}.",
+    "Standard Vendor Agreement Template",
+    "Note this only applies going forward / to vendors on the current template — check whether legacy vendor contracts predate this clause and flag any that don't include it.")
+
+add("Third-Party Risk Management",
+    "Is vendor access to production systems reviewed or re-certified periodically?",
+    ["Do you review vendor access regularly?"],
+    ["vendor access review", "vendor access recertification"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently have a periodic re-certification process for vendor access to production systems; access is reviewed at contract renewal only.",
+    "Vendor Access Re-certification SOP",
+    "Can often be folded into the same quarterly access-review cadence used for employee accounts (Access Control domain) rather than built as a separate process.")
+
+add("Third-Party Risk Management",
+    "Does the organization have a process to offboard vendors and revoke their access upon contract termination?",
+    ["How do you offboard vendors?"],
+    ["vendor offboarding", "vendor access revocation"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} follows a documented vendor offboarding procedure that revokes access upon contract termination. Ref: {{VENDOR_OFFBOARDING_SOP}}.",
+    "Vendor Offboarding SOP",
+    "Ask for one real example of a past vendor offboarding to confirm the SOP has actually been used, not just drafted.")
+
+add("Third-Party Risk Management",
+    "Is the cloud infrastructure provider contractually bound by a signed BAA?",
+    ["Does your cloud provider have a BAA with you?"],
+    ["cloud provider BAA", "AWS/Azure/GCP BAA"], [F_SIG, F_CUST], "Y",
+    "{{CLOUD_PROVIDER}} is bound by a signed Business Associate Addendum, executed {{DATE}}.",
+    "Cloud Provider BAA",
+    "This should be straightforward to confirm — pull the actual executed addendum/account settings page as the artifact rather than assuming it based on the provider offering one.")
+
+add("Third-Party Risk Management",
+    "Is there a documented approval process before employees adopt new third-party SaaS or AI tools?",
+    ["How do new SaaS/AI tools get approved?"],
+    ["SaaS approval process", "AI tool intake", "shadow IT"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not yet have a formal intake/approval process for new SaaS or AI tool adoption; this is a known gap being addressed via {{AI Acceptable Use Policy rollout}}.",
+    "AI/SaaS Tool Intake & Approval Policy",
+    "This is precisely the gap the AI Data Exposure Register product is built to find and fix — treat it as a natural upsell bridge when this answer is No in a Deal Unlocker engagement.")
+
+add("Third-Party Risk Management",
+    "Does the organization require vendors handling PHI to maintain encryption at rest and in transit?",
+    ["Do your vendor contracts require encryption?"],
+    ["vendor encryption requirement"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}}'s standard vendor agreement requires encryption at rest and in transit for any vendor handling PHI. Ref: {{VENDOR_AGREEMENT_TEMPLATE}}, §{{SECTION}}.",
+    "Standard Vendor Agreement Template",
+    "Confirm this clause is in the template actually used for PHI-handling vendors specifically, not just a generic clause that may not appear in every executed contract.")
+
+add("Third-Party Risk Management",
+    "Is there a named individual responsible for vendor/third-party risk management?",
+    ["Who owns vendor risk?"],
+    ["vendor risk owner"], [F_SIG, F_CAIQ], "Y",
+    "{{NAME/TITLE}} (Security Officer) is responsible for vendor/third-party risk management. Ref: {{INFOSEC_POLICY}}, §{{SECTION}}.",
+    "Information Security Policy",
+    "Usually the same person as the general Security Officer role at a small company — fine to answer that way rather than implying a separate dedicated vendor-risk role exists.")
+
+add("Third-Party Risk Management",
+    "Does the organization maintain documentation of each subprocessor's own subprocessors (fourth-party risk)?",
+    ["Do you track your vendors' vendors?"],
+    ["fourth-party risk", "subprocessor's subprocessors"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} relies on its primary subprocessors' own published subprocessor lists (e.g., {{CLOUD_PROVIDER}}'s subprocessor disclosures) rather than maintaining a separate fourth-party register.",
+    "Subprocessor Register",
+    "A reasonable and common answer at this maturity level — most companies rely on upstream disclosures rather than building independent fourth-party tracking; frame it that way rather than as a flat gap.")
+
+add("Third-Party Risk Management",
+    "Are data processing agreements (DPAs) in place with all vendors that process personal data on the organization's behalf, separate from any BAA?",
+    ["Do you have DPAs with your vendors?"],
+    ["DPA", "data processing agreement"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} has DPAs in place with {{N_WITH_DPA}} of {{N_TOTAL}} vendors processing personal data; remaining DPAs are being pursued, target {{TARGET_DATE}}.",
+    "Vendor DPA Tracker",
+    "Distinct from the BAA question above — a vendor can have a DPA without a BAA (e.g., a non-PHI SaaS tool that still processes personal data) and questionnaires sometimes ask both separately.")
+
+# =====================================================================
+# HUMAN RESOURCES SECURITY (8)
+# =====================================================================
+add("Human Resources Security",
+    "Are background checks performed on employees prior to hire, particularly for roles with access to PHI or production systems?",
+    ["Do you background-check new hires?"],
+    ["background check", "pre-employment screening"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} conducts background checks prior to hire for all employees, with enhanced screening for roles accessing PHI or production systems. Ref: {{HR_POLICY}}.",
+    "HR Onboarding Policy",
+    "Confirm this applies to contractors with production/PHI access as well, not just W-2 employees — a common scope gap.")
+
+add("Human Resources Security",
+    "Do employees sign a confidentiality / non-disclosure agreement (NDA) as a condition of employment?",
+    ["Is an NDA required?"],
+    ["NDA", "confidentiality agreement"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "All employees sign a confidentiality/NDA agreement as a condition of employment. Ref: {{HR_POLICY}} / employment agreement template.",
+    "Employment Agreement Template (NDA clause)",
+    "Confirm this is actually in the current employment agreement template, not an older version that may have been superseded.")
+
+add("Human Resources Security",
+    "Is security responsibility included in employee job descriptions/performance expectations where relevant?",
+    ["Are security duties part of job descriptions?"],
+    ["security role expectations", "job description security clause"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} communicates security responsibilities through the Acceptable Use Policy and training rather than embedding them formally in individual job descriptions.",
+    "Acceptable Use Policy",
+    "A minor/low-priority gap — not worth significant remediation effort unless a specific questionnaire weights it heavily.")
+
+add("Human Resources Security",
+    "Is there a formal disciplinary process for security policy violations?",
+    ["What happens if an employee violates security policy?"],
+    ["disciplinary process", "policy violation consequences"], [F_SIG, F_CAIQ], "Y",
+    "Security policy violations are addressed under {{COMPANY}}'s standard HR disciplinary process, referenced in {{AUP}}, §{{SECTION}}.",
+    "Acceptable Use Policy / Employee Handbook",
+    "Confirm the AUP or handbook actually references consequences, not just acceptable-use expectations with no stated enforcement mechanism.")
+
+add("Human Resources Security",
+    "Are employees required to complete role-specific security training (e.g., secure coding training for engineers)?",
+    ["Is there specialized security training for engineers?"],
+    ["secure coding training", "role-specific security training"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} provides general security awareness training to all employees; role-specific training (e.g., secure coding for engineers) is {{planned / informal via code review mentorship}}.",
+    "Security Awareness Training Log",
+    "A reasonable next step rather than an urgent gap — frame as a maturity-building item rather than a critical deficiency.")
+
+add("Human Resources Security",
+    "Is access and equipment returned/revoked as part of a documented offboarding checklist upon employee departure?",
+    ["Is there an offboarding checklist?"],
+    ["offboarding checklist", "equipment return"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}}'s Offboarding SOP includes a checklist covering access revocation and equipment return. Ref: {{OFFBOARDING_SOP}}.",
+    "Offboarding SOP",
+    "Same underlying document as the Access Control offboarding question — reuse the same citation and keep both answers consistent.")
+
+add("Human Resources Security",
+    "Are remote/work-from-home employees provided with security guidance specific to home network environments?",
+    ["Is there remote-work security guidance?"],
+    ["remote work security", "home network guidance"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} does not currently provide formal home-network security guidance beyond the general Acceptable Use Policy.",
+    "Acceptable Use Policy (remote work addendum)",
+    "Low-cost remediation — a one-page guidance document (secure router/Wi-Fi settings, no public Wi-Fi for sensitive work) can close this gap quickly for a remote-first team.")
+
+add("Human Resources Security",
+    "Does the organization conduct exit interviews that include a review of confidentiality obligations surviving employment?",
+    ["Do exit interviews cover confidentiality?"],
+    ["exit interview", "post-employment confidentiality"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not currently conduct a formal exit interview with a dedicated confidentiality-obligations review; the surviving NDA terms are referenced in the original employment agreement.",
+    "Offboarding SOP",
+    "A quick addition to the existing offboarding checklist rather than a new process — note that in the remediation framing.")
+
+# =====================================================================
+# PHYSICAL & ENVIRONMENTAL SECURITY (6)
+# =====================================================================
+add("Physical & Environmental Security",
+    "Does the organization maintain physical access controls (badge access, visitor logs) for any office locations?",
+    ["Is office access controlled?"],
+    ["physical access control", "badge access", "visitor log"], [F_SIG, F_CAIQ], "N/A",
+    "{{If remote-first: “{{COMPANY}} operates as a fully remote organization with no physical office location; this control is not applicable.” If office exists: describe badge/visitor controls.}}",
+    "Information Security Policy (physical security section)",
+    "For remote-first companies (increasingly common among small healthtech startups), answer N/A with a brief explanation rather than forcing a Yes/No — reviewers generally accept this when clearly stated.")
+
+add("Physical & Environmental Security",
+    "Are data center/cloud provider facilities independently certified for physical security (e.g., SOC 2, ISO 27001)?",
+    ["Is your data center physically secure?"],
+    ["data center physical security", "cloud provider certification"], [F_SIG, F_CAIQ, F_CUST], "Y",
+    "{{COMPANY}} relies on {{CLOUD_PROVIDER}}'s certified data centers (SOC 2, ISO 27001), per the provider's published compliance documentation. Ref: {{CLOUD_PROVIDER}} compliance reports.",
+    "Cloud Provider Compliance Documentation",
+    "Link to the specific cloud provider's compliance page/report rather than a generic claim — these are publicly available and easy to cite precisely.")
+
+add("Physical & Environmental Security",
+    "Does the organization have environmental controls (fire suppression, climate control, power redundancy) for any owned/leased data center equipment?",
+    ["Do you have on-prem data center controls?"],
+    ["environmental controls", "fire suppression", "power redundancy"], [F_SIG, F_CAIQ], "N/A",
+    "{{COMPANY}} does not own or lease any physical data center equipment; all production infrastructure runs on {{CLOUD_PROVIDER}}'s managed facilities.",
+    "Infrastructure Architecture Diagram",
+    "Almost always N/A for a cloud-native startup — a fast, confident answer that shouldn't require much engineer time.")
+
+add("Physical & Environmental Security",
+    "Is physical access to any on-site servers or network equipment restricted to authorized personnel only?",
+    ["Who can physically access your servers/network gear?"],
+    ["on-site server access", "network equipment access"], [F_SIG, F_CAIQ], "N/A",
+    "{{COMPANY}} has no on-site servers or network equipment requiring physical access control; {{if office router/switch exists: it is located in a locked IT closet accessible only to designated staff}}.",
+    "Information Security Policy",
+    "Even remote-first companies often have a small office router/switch — confirm specifically before answering fully N/A.")
+
+add("Physical & Environmental Security",
+    "Are visitors to any office location required to sign in and be escorted in areas with access to sensitive information?",
+    ["Do you log and escort visitors?"],
+    ["visitor escort", "visitor sign-in"], [F_SIG, F_CAIQ], "N/A",
+    "{{If remote-first: not applicable. If office exists: “Visitors sign in at reception and are escorted in areas with access to sensitive information.”}}",
+    "Information Security Policy (physical security section)",
+    "Pairs with the first physical-access question — keep both answers consistent regarding office status.")
+
+add("Physical & Environmental Security",
+    "Does the organization maintain an inventory of physical media (backup tapes, hard drives) containing PHI, if any exist outside cloud storage?",
+    ["Do you track physical media with PHI?"],
+    ["physical media inventory", "backup tapes"], [F_SIG, F_CAIQ], "N/A",
+    "{{COMPANY}} does not use physical backup media; all backups are cloud-native (e.g., {{CLOUD_PROVIDER}} snapshots), so no physical media inventory is required.",
+    "Backup & Recovery Policy",
+    "Almost always N/A for a modern cloud-native stack — a fast answer, but worth a one-line confirmation that no one in the office has, e.g., an external hard drive backup habit.")
+
+# =====================================================================
+# COMPLIANCE & AUDIT (10)
+# =====================================================================
+add("Compliance & Audit",
+    "Does the organization maintain a record of applicable regulatory requirements (e.g., HIPAA, state privacy laws) and track compliance obligations?",
+    ["Do you track which regulations apply to you?"],
+    ["regulatory inventory", "compliance obligations tracking"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}} tracks applicable regulatory requirements (HIPAA, {{STATE_LAWS}}) as part of {{INFOSEC_POLICY}} / {{COMPLIANCE_TRACKER}}.",
+    "Compliance Obligations Tracker",
+    "Avoid the word “compliant” here — frame as tracking obligations, not certifying compliance; this distinction matters per the engagement's own guardrails.")
+
+add("Compliance & Audit",
+    "Are internal audits or self-assessments of the security program conducted periodically?",
+    ["Do you self-audit your security program?"],
+    ["internal audit", "self-assessment"], [F_SIG, F_CAIQ, F_CUST], "N",
+    "{{COMPANY}} has not yet conducted a formal internal audit of its security program; the current SOC 2 readiness assessment is serving as the first structured review.",
+    "SOC 2 Readiness Assessment",
+    "If SOC 2 readiness work is underway, that effort itself can usually be cited as satisfying or progressing this control — avoid double-counting it as a wholly separate gap if it's really the same initiative.")
+
+add("Compliance & Audit",
+    "Does the organization maintain documentation demonstrating compliance with applicable data protection regulations (e.g., records of processing activities)?",
+    ["Do you keep compliance evidence on file?"],
+    ["records of processing activities", "compliance documentation"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} maintains individual policy and procedure documents but does not yet have a consolidated records-of-processing-activities (RoPA) document.",
+    "Records of Processing Activities (RoPA)",
+    "More relevant for companies with GDPR exposure (EU customers/employees) — confirm applicability before treating this as a priority gap for a purely US-domestic healthtech client.")
+
+add("Compliance & Audit",
+    "Is there a process to track and respond to new or changing legal/regulatory requirements affecting the organization?",
+    ["How do you stay current on new regulations?"],
+    ["regulatory change tracking"], [F_SIG, F_CUST], "N",
+    "{{COMPANY}} monitors regulatory developments informally (industry publications, legal counsel updates) rather than through a formal tracking process.",
+    "Compliance Obligations Tracker",
+    "Reasonable informal answer for a small company; note any specific recent example (e.g., tracking ABA Opinion 512 or a state AI law) as evidence the informal process actually works.")
+
+add("Compliance & Audit",
+    "Does the organization retain documentation (contracts, policies, audit logs) for a period sufficient to meet regulatory and contractual requirements?",
+    ["How long do you retain compliance documentation?"],
+    ["documentation retention", "contract retention"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}} retains contracts, policies, and audit logs for {{RETENTION_PERIOD}}, consistent with {{applicable regulatory/contractual requirements}}.",
+    "Data Retention Schedule",
+    "If the broader Data Retention Schedule gap (Data Governance domain) exists, this answer should be consistent with that gap rather than claiming a formal schedule exists here but not there.")
+
+add("Compliance & Audit",
+    "Has the organization identified and documented which specific regulations apply to its data processing activities (e.g., HIPAA, state breach notification laws, FTC Act)?",
+    ["What regulations apply to your business specifically?"],
+    ["applicable regulations", "regulatory scoping"], [F_SIG, F_CUST], "Y",
+    "{{COMPANY}} has identified HIPAA (as a business associate), {{applicable state breach notification laws}}, and {{other applicable frameworks}} as governing its data processing activities.",
+    "Compliance Obligations Tracker",
+    "Keep this answer scoped to what legal counsel has actually confirmed — avoid the engineer independently asserting legal applicability determinations that should come from counsel.")
+
+add("Compliance & Audit",
+    "Is there a designated individual or team responsible for privacy compliance (e.g., Privacy Officer)?",
+    ["Who owns privacy compliance?"],
+    ["Privacy Officer", "privacy compliance owner"], [F_SIG, F_CUST], "Y",
+    "{{NAME/TITLE}} serves as Privacy Officer / is responsible for privacy compliance oversight. Ref: {{INFOSEC_POLICY}}, §{{SECTION}}.",
+    "Information Security Policy",
+    "At a small company this is often the same person as the Security Officer — fine to answer that way explicitly rather than implying two separate roles exist.")
+
+add("Compliance & Audit",
+    "Does the organization have a documented process for responding to regulatory inquiries or audits?",
+    ["What happens if a regulator contacts you?"],
+    ["regulatory inquiry response", "audit response process"], [F_SIG, F_CAIQ], "N",
+    "{{COMPANY}} does not have a separately documented regulatory-inquiry response procedure; such an inquiry would be escalated immediately to {{leadership and outside counsel}} under the general Incident Response Plan.",
+    "Incident Response Plan (regulatory inquiry addendum)",
+    "A reasonable answer for a small company — escalation to counsel is the right first step regardless of formal documentation; note that clearly rather than implying no process exists at all.")
+
+add("Compliance & Audit",
+    "Are results of security assessments, audits, or penetration tests reviewed by executive leadership?",
+    ["Does leadership see assessment results?"],
+    ["executive review of assessments", "leadership security reporting"], [F_SIG, F_CAIQ], "Y",
+    "Results of security assessments are reviewed with {{CEO/leadership}} as part of {{the SOC 2 readiness process / quarterly business review}}.",
+    "Information Security Policy (governance section)",
+    "Confirm this review has actually happened at least once for whatever assessment is being cited, rather than describing an intended-but-unused process.")
+
+add("Compliance & Audit",
+    "Does the organization maintain a document/policy version control and approval history for all security and compliance policies?",
+    ["Do you track policy versions and approvals?"],
+    ["policy version control", "policy approval history"], [F_SIG, F_CAIQ], "Y",
+    "{{COMPANY}} maintains version history and approval records for all security policies via {{TOOL, e.g., Google Docs version history / a document management system}}.",
+    "Information Security Policy (version history)",
+    "Quick to verify — check the actual document's revision history/metadata before confirming this answer.")
+
+# ---------------------------------------------------------------------------
+# Write CSV
+# ---------------------------------------------------------------------------
+FIELDS = ["id", "domain", "canonical_question", "question_variants", "keywords",
+          "frameworks", "default_answer", "answer_template", "artifact_type",
+          "verification_guidance"]
+
+OUT = "answer_library_master.csv"
+with open(OUT, "w", newline="", encoding="utf-8") as f:
+    w = csv.DictWriter(f, fieldnames=FIELDS, quoting=csv.QUOTE_ALL)
+    w.writeheader()
+    for r in ROWS:
+        w.writerow(r)
+
+print(f"Wrote {OUT} with {len(ROWS)} rows across {len(set(r['domain'] for r in ROWS))} domains.")
+from collections import Counter
+c = Counter(r["domain"] for r in ROWS)
+for d, n in c.items():
+    print(f"  {d}: {n}")
