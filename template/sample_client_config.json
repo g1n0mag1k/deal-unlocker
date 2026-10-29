@@ -1,0 +1,14 @@
+{
+  "company_name": "Example Health, Inc.",
+  "company_blurb": "A small healthtech SaaS company providing patient engagement software to hospital systems and ambulatory networks.",
+  "product_scope": "Example patient engagement platform (web application, mobile app, and supporting cloud infrastructure). Processes and stores ePHI on behalf of covered-entity customers under executed Business Associate Agreements.",
+  "questionnaire_type": "SIG Lite",
+  "posture_summary": "Core technical controls (encryption, MFA, RBAC) are in place and evidenced. Open items cluster in governance cadence (periodic reviews, testing) rather than foundational control gaps.",
+  "buyer_label": "Enterprise Buyer Security Review Team",
+  "prepared_date": "2026-10-29",
+  "priority_callout": null,
+  "is_sample": true,
+  "firm_name": "Sui-Generis LLC",
+  "firm_location": "Knoxville, TN",
+  "id_prefix": "SIG"
+}

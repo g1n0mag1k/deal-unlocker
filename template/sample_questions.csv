@@ -1,0 +1,9 @@
+domain,question,answer,note,priority,target_days,artifact_required
+Asset Management,Does the organization maintain an inventory of all information system assets?,Y,Ref: Asset Inventory v1.0 (reconciled monthly),,,
+Asset Management,Are all production servers tagged with a data classification level?,N,Asset tagging exists for ownership but not for data classification level.,Medium,60,Data Classification Tagging Standard
+Data Management,Is data encrypted at rest for all production databases?,Y,Ref: Encryption Standard v1.0 (AES-256),,,
+Data Management,Does the organization maintain a documented data retention schedule?,N,No formal retention schedule exists; data is retained indefinitely by default.,High,45,Data Retention Schedule
+Access Control,Is multi-factor authentication enforced for all remote access?,Y,Ref: IAM Policy v1.0 §4 (MFA enforced via Okta),,,
+Access Control,Are user access rights reviewed on a periodic basis?,N,No periodic access recertification process exists.,High,45,Quarterly Access Recertification Log
+Incident Management,Does the organization maintain a documented incident response plan?,Y,Ref: Incident Response Plan v1.0,,,
+Incident Management,Is the incident response plan tested via tabletop exercise annually?,N,The IR plan has not yet been exercised through a tabletop simulation.,Low,90,Tabletop Exercise After-Action Report
