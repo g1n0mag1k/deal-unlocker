@@ -18,4 +18,6 @@ Productized by Sui-Generis LLC.
 4. Run `template/build_deliverable.py` against the reviewed CSV + a client config JSON → the final Reviewer Brief + Answer Set + Gap Register as one print-ready HTML.
 5. Feed real near-misses from the engagement back into the answer library as new variants/keywords.
 
-Still open: a questionnaire-text-extraction helper for PDF/Excel inputs (currently manual), and the Netlify client intake form.
+Still open: a questionnaire-text-extraction helper for PDF/Excel inputs (currently manual).
+
+Client intake form (covers both Deal Unlocker and the AI Data Exposure Register) lives in its own repo: [`sui-generis-intake`](https://github.com/g1n0mag1k/sui-generis-intake).
