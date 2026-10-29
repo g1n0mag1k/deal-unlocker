@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ClearPath Health — SIG Lite Response &amp; Gap Register</title>
+<style>
+  :root {
+    --navy: #0f2a4a;
+    --navy-light: #1d4273;
+    --accent: #1a73a3;
+    --accent-light: #e8f1f6;
+    --ink: #1c242e;
+    --muted: #5b6672;
+    --border: #d7dde3;
+    --bg-soft: #f6f8fa;
+    --yes: #1b7a43;
+    --yes-bg: #e5f5ea;
+    --no: #b23b2e;
+    --no-bg: #fbeae7;
+    --high: #b23b2e;
+    --high-bg: #fbeae7;
+    --med: #a4700a;
+    --med-bg: #fbf1de;
+    --low: #4c5a68;
+    --low-bg: #eef1f4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    color: var(--ink);
+    margin: 0;
+    background: #fff;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 40px 48px 64px; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    border-bottom: 3px solid var(--navy); padding-bottom: 18px; margin-bottom: 28px;
+  }
+  .masthead h1 { font-size: 22px; margin: 0 0 4px; color: var(--navy); letter-spacing: -0.2px; }
+  .masthead .sub { color: var(--muted); font-size: 13px; }
+  .masthead .meta { text-align: right; font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .masthead .meta strong { color: var(--ink); }
+  .doc-tag {
+    display: inline-block; background: var(--navy); color: #fff; font-size: 10.5px;
+    font-weight: 600; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 3px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  /* ---- Reviewer Brief ---- */
+  .brief {
+    background: var(--bg-soft); border: 1px solid var(--border); border-left: 5px solid var(--navy);
+    border-radius: 6px; padding: 22px 26px; margin-bottom: 34px; page-break-inside: avoid;
+  }
+  .brief h2 { margin: 0 0 14px; font-size: 16.5px; color: var(--navy); }
+  .brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; margin-bottom: 16px; }
+  .brief-grid .label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 2px; }
+  .brief-grid .value { font-size: 13.5px; }
+  .stat-row { display: flex; gap: 14px; margin: 14px 0 16px; flex-wrap: wrap; }
+  .stat-box { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; min-width: 108px; text-align: center; }
+  .stat-box .num { font-size: 22px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .stat-box.alert .num { color: var(--high); }
+  .stat-box .lbl { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .brief p { margin: 8px 0; }
+  .brief .priority-line { font-size: 12.5px; color: var(--muted); }
+  .brief .priority-line b { color: var(--ink); }
+
+  /* ---- TOC ---- */
+  .toc { margin-bottom: 30px; }
+  .toc h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+  .toc ul { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 32px; }
+  .toc li { margin-bottom: 6px; break-inside: avoid; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: 12.5px; }
+  .toc-count { color: var(--muted); font-size: 11px; }
+
+  h2.section-title {
+    font-size: 16px; color: var(--navy); border-bottom: 2px solid var(--border);
+    padding-bottom: 6px; margin: 38px 0 18px;
+  }
+
+  /* ---- Domain / Q&A tables ---- */
+  .domain-section { margin-bottom: 26px; page-break-inside: avoid; }
+  .domain-section h3 {
+    font-size: 13.5px; color: var(--navy-light); background: var(--accent-light);
+    padding: 7px 12px; border-radius: 4px; margin: 0 0 8px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .domain-tally { font-size: 11px; font-weight: 500; color: var(--navy); }
+  table.qa-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.qa-table th {
+    text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); border-bottom: 1px solid var(--border); padding: 5px 8px;
+  }
+  table.qa-table td { padding: 7px 8px; border-bottom: 1px solid #ecf0f3; vertical-align: top; }
+  .col-id { width: 7%; } .col-q { width: 40%; } .col-ans { width: 8%; } .col-note { width: 45%; }
+  .qid { font-family: "SFMono-Regular", Consolas, monospace; font-size: 10.5px; color: var(--muted); }
+  .pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.03em; }
+  .pill-yes { background: var(--yes-bg); color: var(--yes); }
+  .pill-no { background: var(--no-bg); color: var(--no); }
+  .citation { color: var(--muted); font-style: italic; }
+  .finding { color: var(--no); }
+  .see-gap { color: var(--muted); font-size: 11px; }
+
+  /* ---- Gap Register ---- */
+  table.gap-table { width: 100%; border-collapse: collapse; font-size: 11.8px; margin-top: 6px; }
+  table.gap-table th {
+    text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #fff; background: var(--navy); padding: 8px; position: sticky; top: 0;
+  }
+  table.gap-table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.gap-table tr:nth-child(even) td { background: #fafbfc; }
+  .gap-control { font-weight: 600; width: 22%; }
+  .gap-finding { color: var(--muted); width: 26%; }
+  .gap-date { white-space: nowrap; font-weight: 600; color: var(--navy); }
+  .gap-domain { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .gap-artifact { width: 20%; }
+  .pr-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .pr-high { background: var(--high-bg); color: var(--high); }
+  .pr-med { background: var(--med-bg); color: var(--med); }
+  .pr-low { background: var(--low-bg); color: var(--low); }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 10.5px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+  .sample-watermark {
+    position: fixed; top: 46%; left: 50%; transform: translate(-50%,-50%) rotate(-28deg);
+    font-size: 86px; font-weight: 800; color: rgba(15,42,74,0.06); z-index: -1;
+    letter-spacing: 0.05em; pointer-events: none; white-space: nowrap;
+  }
+
+  @media print {
+    .page { padding: 0.3in 0.5in; }
+    .domain-section { break-inside: avoid; }
+    table.gap-table { break-inside: auto; }
+    table.gap-table tr { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+  @page { margin: 0.5in; size: letter; }
+</style>
+</head>
+<body>
+<div class="sample-watermark">SAMPLE — FICTIONAL DATA</div>
+<div class="page">
+
+  <div class="masthead">
+    <div>
+      <div class="doc-tag">SIG Lite Response &amp; Gap Register</div>
+      <h1>ClearPath Health, Inc.</h1>
+      <div class="sub">Standardized Information Gathering (SIG) Lite &mdash; Security Questionnaire Response</div>
+    </div>
+    <div class="meta">
+      <div><strong>Prepared for:</strong> Enterprise Buyer Security Review Team</div>
+      <div><strong>Prepared:</strong> October 28, 2026</div>
+      <div><strong>Scope:</strong> ClearPath Patient Engagement Platform (production)</div>
+      <div><strong>Document support:</strong> Sui-Generis LLC &mdash; Deal Unlocker</div>
+    </div>
+  </div>
+
+  <div class="brief">
+    <h2>Reviewer Brief</h2>
+    <div class="brief-grid">
+      <div>
+        <div class="label">Company</div>
+        <div class="value">ClearPath Health, Inc. &mdash; 15-employee healthtech SaaS company providing patient engagement software to hospital systems and ambulatory networks.</div>
+      </div>
+      <div>
+        <div class="label">Product in scope</div>
+        <div class="value">ClearPath patient engagement platform (web application, mobile app, and supporting AWS infrastructure). Processes and stores ePHI on behalf of covered-entity customers under executed Business Associate Agreements.</div>
+      </div>
+      <div>
+        <div class="label">Questionnaire</div>
+        <div class="value">SIG Lite, 80 questions, standard domains. Answered by ClearPath's Security Officer and reviewed for completeness prior to delivery.</div>
+      </div>
+      <div>
+        <div class="label">Overall posture summary</div>
+        <div class="value">Core technical controls (encryption, MFA, RBAC, network architecture) are in place and evidenced. Open items cluster in governance cadence (periodic reviews, testing, formal risk assessment) rather than foundational control gaps &mdash; consistent with a 15-person company at this stage of growth.</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num">80</div><div class="lbl">Questions</div></div>
+      <div class="stat-box"><div class="num">54</div><div class="lbl">Satisfied</div></div>
+      <div class="stat-box alert"><div class="num">26</div><div class="lbl">Open gaps</div></div>
+      <div class="stat-box alert"><div class="num">12</div><div class="lbl">High priority</div></div>
+      <div class="stat-box"><div class="num">10</div><div class="lbl">Medium priority</div></div>
+      <div class="stat-box"><div class="num">4</div><div class="lbl">Low priority</div></div>
+    </div>
+    <p class="priority-line"><b>Fastest-closing high-priority items:</b> staging PHI masking (Dec 12), outstanding subprocessor BAAs (Nov 27), security monitoring/alerting (Dec 12), AI/SaaS tool intake policy (Dec 12), cyber E&amp;O coverage (Dec 12). Full remediation timeline and artifact requirements follow in the Gap Register below.</p>
+    <p class="priority-line">This brief and the attached answer set are intended to give your security review team a complete, source-cited picture of ClearPath's control environment in a single pass, with named artifacts available for follow-up evidence requests. No statement in this document should be read as a legal compliance or certification conclusion.</p>
+  </div>
+
+  <div class="toc">
+    <h3>Domains in this response</h3>
+    <ul><li><a href="#dom-asset-management">Asset Management <span class="toc-count">(10 questions, 3 open)</span></a></li><li><a href="#dom-data-management">Data Management <span class="toc-count">(14 questions, 4 open)</span></a></li><li><a href="#dom-security-policy">Security Policy <span class="toc-count">(10 questions, 3 open)</span></a></li><li><a href="#dom-access-control">Access Control <span class="toc-count">(14 questions, 4 open)</span></a></li><li><a href="#dom-incident-management">Incident Management <span class="toc-count">(12 questions, 3 open)</span></a></li><li><a href="#dom-third-party-management">Third-Party Management <span class="toc-count">(12 questions, 5 open)</span></a></li><li><a href="#dom-business-continuity">Business Continuity <span class="toc-count">(8 questions, 4 open)</span></a></li></ul>
+  </div>
+
+  <h2 class="section-title">Part 1 &mdash; SIG Lite Answer Set (80 Questions)</h2>
+  
+    <section class="domain-section" id="dom-asset-management">
+      <h3>Asset Management <span class="domain-tally">7/10 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-01</td>
+          <td class="qtext">Does the organization maintain an inventory of all information system assets (hardware, software, cloud services)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Asset Inventory v1.3 (Asset Panda, reconciled monthly)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-02</td>
+          <td class="qtext">Is the asset inventory updated on a defined schedule?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Asset Management Policy v1.1, §3.2 (monthly reconciliation)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-03</td>
+          <td class="qtext">Are all production servers and endpoints tagged with a data classification level?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Asset tagging exists for ownership but not for data classification level.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-04</td>
+          <td class="qtext">Is there a documented asset decommissioning/disposal procedure, including data sanitization?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Asset Decommissioning SOP v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-05</td>
+          <td class="qtext">Are mobile devices used to access company systems enrolled in a mobile device management (MDM) solution?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: MDM Enrollment Policy v1.0 (Jamf / Microsoft Intune)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-06</td>
+          <td class="qtext">Is full-disk encryption enforced on all laptops issued to employees?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Endpoint Encryption Standard v1.0 (BitLocker/FileVault, enforced via MDM)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-07</td>
+          <td class="qtext">Does the organization maintain a software bill of materials (SBOM) for its production application?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No SBOM currently generated for the production codebase or its dependencies.</span> <span class="see-gap">— see Gap Register, target January 26, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-08</td>
+          <td class="qtext">Are end-of-life / end-of-support dates tracked for all software and operating system versions in use?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No centralized EOL/EOS tracking process exists; currently ad hoc.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-09</td>
+          <td class="qtext">Is there a formal asset ownership assignment, with each asset mapped to a named owner?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Asset Inventory v1.3, “Owner” field</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-10</td>
+          <td class="qtext">Are removable media (USB drives, external storage) restricted or prohibited on company endpoints?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Endpoint Security Policy v1.0, §4 (USB write-block enforced via MDM)</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-data-management">
+      <h3>Data Management <span class="domain-tally">10/14 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-11</td>
+          <td class="qtext">Does the organization maintain a data classification policy (e.g., public / internal / confidential / restricted)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Data Classification Policy v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-12</td>
+          <td class="qtext">Is PHI / ePHI specifically identified and labeled as a distinct data classification tier?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Data Classification Policy v1.0, §2.3 (PHI tier)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-13</td>
+          <td class="qtext">Is data encrypted at rest for all production databases?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Encryption Standard v1.0 (AES-256, AWS RDS storage encryption enabled)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-14</td>
+          <td class="qtext">Is data encrypted in transit (TLS 1.2 or higher) for all external connections?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Encryption Standard v1.0, §3 (TLS 1.2 minimum, enforced at load balancer)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-15</td>
+          <td class="qtext">Does the organization maintain a documented data retention schedule?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal retention schedule; data is retained indefinitely by default.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-16</td>
+          <td class="qtext">Is there a documented and tested data deletion/destruction procedure upon client request or contract termination?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal procedure; deletions have been handled manually on an ad hoc basis.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-17</td>
+          <td class="qtext">Are database backups encrypted?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Backup &amp; Recovery Policy v1.0, §2 (encrypted snapshots, AWS KMS)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-18</td>
+          <td class="qtext">Is production data used in non-production (development/test/staging) environments?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Production PHI is currently copied to staging without masking or de-identification.</span> <span class="see-gap">— see Gap Register, target December 12, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-19</td>
+          <td class="qtext">Is there a data masking or de-identification process for any non-production use of data?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No masking/synthetic-data process exists for staging or developer environments.</span> <span class="see-gap">— see Gap Register, target December 12, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-20</td>
+          <td class="qtext">Does the organization maintain a documented data flow diagram showing where PHI is collected, stored, processed, and transmitted?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Data Flow Diagram v1.0 (reviewed August 2026)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-21</td>
+          <td class="qtext">Are database administrative credentials stored in a secrets manager rather than hardcoded or in plaintext?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Secrets Management Standard v1.0 (AWS Secrets Manager)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-22</td>
+          <td class="qtext">Is there a defined data owner or steward for each major data category?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Data Classification Policy v1.0, Appendix A</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-23</td>
+          <td class="qtext">Does the organization encrypt data stored on backup media or offsite backups?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Backup &amp; Recovery Policy v1.0, §2</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-24</td>
+          <td class="qtext">Is there a process to ensure data minimization, i.e., collecting only data necessary for the stated purpose?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Privacy-by-Design Checklist v1.0, applied at feature intake</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-security-policy">
+      <h3>Security Policy <span class="domain-tally">7/10 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-25</td>
+          <td class="qtext">Does the organization maintain a formal, leadership-approved information security policy?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Information Security Policy v1.2 (approved by CEO, March 2026)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-26</td>
+          <td class="qtext">Is the information security policy reviewed and updated at least annually?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Information Security Policy v1.2, §1 (annual review cycle)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-27</td>
+          <td class="qtext">Does the organization have a designated individual responsible for information security (CISO, Security Officer, or equivalent)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Information Security Policy v1.2, §2 (Security Officer designated)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-28</td>
+          <td class="qtext">Is there a documented acceptable use policy for company systems?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Acceptable Use Policy v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-29</td>
+          <td class="qtext">Do employees receive security awareness training upon hire and annually thereafter?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Security Awareness Training Log 2026 (KnowBe4, 100% completion)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-30</td>
+          <td class="qtext">Does the organization conduct a periodic (at least annual) formal risk assessment?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal, documented risk assessment has been completed to date.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-31</td>
+          <td class="qtext">Is there a documented change management policy for production systems?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Change Management Policy v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-32</td>
+          <td class="qtext">Does the organization have a formal exception process for policy deviations?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Policy exceptions are currently handled informally with no documented process.</span> <span class="see-gap">— see Gap Register, target January 26, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-33</td>
+          <td class="qtext">Is there a documented password policy meeting minimum complexity and rotation standards?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Identity &amp; Access Management Policy v1.1, §3</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-34</td>
+          <td class="qtext">Has the organization completed a SOC 2 Type I or Type II audit, or a formal HITRUST assessment?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">SOC 2 Type I readiness assessment is in progress; no completed audit yet.</span> <span class="see-gap">— see Gap Register, target January 26, 2027</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-access-control">
+      <h3>Access Control <span class="domain-tally">10/14 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-35</td>
+          <td class="qtext">Is access to production systems granted based on least privilege / role-based access control (RBAC)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Identity &amp; Access Management Policy v1.1, §2</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-36</td>
+          <td class="qtext">Is multi-factor authentication (MFA) enforced for all remote/VPN access?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §4 (Okta MFA enforced)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-37</td>
+          <td class="qtext">Is MFA enforced for access to production cloud infrastructure (AWS/Azure/GCP console)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §4 (AWS IAM + Okta SSO, MFA required)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-38</td>
+          <td class="qtext">Is MFA enforced for access to the application containing PHI?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §4</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-39</td>
+          <td class="qtext">Are user access rights reviewed on a periodic (at least quarterly) basis?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No periodic access recertification process exists; access reviews have been reactive only.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-40</td>
+          <td class="qtext">Is there a documented, timely offboarding procedure that revokes access upon termination?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Offboarding SOP v1.0 (access revoked within 4 business hours of termination notice)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-41</td>
+          <td class="qtext">Are privileged/administrative accounts separate from standard user accounts?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §5 (separate admin accounts; no shared root use)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-42</td>
+          <td class="qtext">Is shared or generic account usage prohibited, i.e., does each user have a unique ID?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §1</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-43</td>
+          <td class="qtext">Is there a formal access request and approval workflow requiring manager/owner sign-off?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Access Request SOP v1.0 (Jira-based approval workflow)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-44</td>
+          <td class="qtext">Are session timeouts enforced for applications handling PHI?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Application Security Standard v1.0, §2 (15-minute idle timeout)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-45</td>
+          <td class="qtext">Is remote access to the corporate network restricted to company-managed, MDM-enrolled devices?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Some staff access company systems from unmanaged personal devices.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-46</td>
+          <td class="qtext">Does the organization log and actively monitor privileged account activity?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Privileged activity is logged but not actively monitored or alerted on.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-47</td>
+          <td class="qtext">Is there a documented process for emergency (“break-glass”) access to production systems?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal break-glass procedure is documented.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-48</td>
+          <td class="qtext">Are failed login attempts monitored and accounts locked out after a defined threshold?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: IAM Policy v1.1, §3 (5 failed attempts, 30-minute lockout)</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-incident-management">
+      <h3>Incident Management <span class="domain-tally">9/12 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-49</td>
+          <td class="qtext">Does the organization maintain a documented security incident response plan?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Incident Response Plan v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-50</td>
+          <td class="qtext">Is the incident response plan tested via tabletop exercise or similar at least annually?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">The IR plan has not yet been exercised through a tabletop simulation.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-51</td>
+          <td class="qtext">Is there a designated incident response team with defined roles and responsibilities?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Incident Response Plan v1.0, §2</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-52</td>
+          <td class="qtext">Does the organization have a documented breach notification procedure consistent with the HIPAA Breach Notification Rule (45 CFR §§ 164.400–414) timelines?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Breach Notification SOP v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-53</td>
+          <td class="qtext">Is there defined, continuous monitoring and alerting for security events on production systems?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Logs are collected but not continuously monitored; no alerting pipeline is configured.</span> <span class="see-gap">— see Gap Register, target December 12, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-54</td>
+          <td class="qtext">Does the organization maintain centralized logging for production systems (application, infrastructure, and access logs)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Logging Standard v1.0 (CloudWatch + centralized log aggregation)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-55</td>
+          <td class="qtext">Are logs retained for a minimum of one year, or per applicable regulatory requirement?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Logging Standard v1.0, §3 (13-month retention)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-56</td>
+          <td class="qtext">Is there a documented process for notifying affected customers/business associates in the event of a breach involving their data?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Breach Notification SOP v1.0, §4</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-57</td>
+          <td class="qtext">Has the organization experienced a reportable security incident or breach in the past 12 months?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Incident Log 2026 — zero reportable incidents on record as of this disclosure</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-58</td>
+          <td class="qtext">Is there a post-incident review / lessons-learned process?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Incident Response Plan v1.0, §6</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-59</td>
+          <td class="qtext">Does the organization maintain cyber liability / technology errors &amp; omissions (E&amp;O) insurance?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Coverage has not yet been bound; quotes are being evaluated.</span> <span class="see-gap">— see Gap Register, target December 12, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-60</td>
+          <td class="qtext">Is there a defined escalation path to executive leadership for high-severity incidents?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Incident Response Plan v1.0, §3</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-third-party-management">
+      <h3>Third-Party Management <span class="domain-tally">7/12 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-61</td>
+          <td class="qtext">Does the organization maintain an inventory of all third-party vendors/subprocessors with access to PHI or company systems?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Subprocessor Register v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-62</td>
+          <td class="qtext">Are Business Associate Agreements (BAAs) executed with all subprocessors that handle PHI?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">2 of 9 listed subprocessors do not yet have an executed BAA on file.</span> <span class="see-gap">— see Gap Register, target November 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-63</td>
+          <td class="qtext">Is there a vendor risk assessment performed prior to onboarding a new vendor?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal pre-onboarding risk assessment process exists.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-64</td>
+          <td class="qtext">Does the organization review vendor SOC 2 reports or equivalent security attestations prior to engagement?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Vendor security attestations are not consistently collected or reviewed.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-65</td>
+          <td class="qtext">Is a documented subprocessor list made available to customers (e.g., in a DPA or published list)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Subprocessor Register v1.0 (published at clearpathhealth.com/subprocessors)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-66</td>
+          <td class="qtext">Are vendors contractually required to notify the organization of a security incident affecting shared data?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Standard Vendor Agreement Template v1.0, §7 (incident notification clause)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-67</td>
+          <td class="qtext">Is vendor access to production systems reviewed or re-certified periodically?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No periodic re-certification of vendor access currently takes place.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-68</td>
+          <td class="qtext">Does the organization have a process to offboard vendors and revoke their access upon contract termination?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Vendor Offboarding SOP v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-69</td>
+          <td class="qtext">Is the cloud infrastructure provider (AWS) contractually bound by a signed BAA?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: AWS Business Associate Addendum (executed January 2025)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-70</td>
+          <td class="qtext">Is there a documented approval process before employees adopt new third-party SaaS or AI tools?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal intake/approval process exists for new SaaS or AI tool adoption.</span> <span class="see-gap">— see Gap Register, target December 12, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-71</td>
+          <td class="qtext">Does the organization require vendors handling PHI to maintain encryption at rest and in transit?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Standard Vendor Agreement Template v1.0, §8</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-72</td>
+          <td class="qtext">Is there a named individual responsible for vendor/third-party risk management?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Information Security Policy v1.2, §2 (Security Officer)</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="domain-section" id="dom-business-continuity">
+      <h3>Business Continuity <span class="domain-tally">4/8 satisfied</span></h3>
+      <table class="qa-table">
+        <thead>
+          <tr><th class="col-id">ID</th><th class="col-q">Question</th><th class="col-ans">Answer</th><th class="col-note">Artifact / Finding</th></tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td class="qid">SIG-73</td>
+          <td class="qtext">Does the organization maintain a documented business continuity / disaster recovery (BC/DR) plan?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Business Continuity &amp; DR Plan v1.0</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-74</td>
+          <td class="qtext">Is the BC/DR plan tested at least annually?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">The BC/DR plan has not yet been formally tested.</span> <span class="see-gap">— see Gap Register, target January 11, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-75</td>
+          <td class="qtext">Are production database backups performed on a defined schedule (e.g., daily)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Backup &amp; Recovery Policy v1.0, §1 (automated daily snapshots)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-76</td>
+          <td class="qtext">Are backups tested for restorability on a periodic basis?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">Backup restoration has not been formally tested within the past 12 months.</span> <span class="see-gap">— see Gap Register, target December 27, 2026</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-77</td>
+          <td class="qtext">Does the organization have a defined Recovery Time Objective (RTO) and Recovery Point Objective (RPO)?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Business Continuity &amp; DR Plan v1.0, §3 (RTO: 8 hrs, RPO: 1 hr)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-78</td>
+          <td class="qtext">Is production infrastructure deployed across multiple availability zones/regions to support failover?</td>
+          <td class="qans"><span class="pill pill-yes">YES</span></td>
+          <td class="qnote"><span class="citation">Ref: Infrastructure Architecture Diagram v1.0 (multi-AZ AWS deployment)</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-79</td>
+          <td class="qtext">Does the organization maintain an alternate communication plan for use during an outage or incident?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No documented out-of-band communication plan exists for staff or customers during an outage.</span> <span class="see-gap">— see Gap Register, target January 26, 2027</span></td>
+        </tr>
+        <tr>
+          <td class="qid">SIG-80</td>
+          <td class="qtext">Is there a documented succession plan for key personnel (e.g., Security Officer, CTO)?</td>
+          <td class="qans"><span class="pill pill-no">NO</span></td>
+          <td class="qnote"><span class="finding">No formal succession plan exists for key security/technical roles.</span> <span class="see-gap">— see Gap Register, target January 26, 2027</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+  <h2 class="section-title">Part 2 &mdash; Gap Register</h2>
+  <p style="color:var(--muted); font-size:12.5px; margin-bottom:14px;">
+    Every "No" response above is tracked here as a dated remediation item. Target dates reflect priority:
+    High-priority items are scheduled within 30&ndash;60 days, Medium within 75 days, and Low within 90 days of this
+    assessment (October 28, 2026). This register is the forward plan ClearPath's Security Officer
+    is accountable for; it is not a representation that the organization is "compliant" with any specific
+    regulation or framework.
+  </p>
+  <table class="gap-table">
+    <thead>
+      <tr><th style="width:8%">Priority</th><th style="width:11%">Domain</th><th>Control</th><th>Finding</th><th style="width:10%">Target Date</th><th>Artifact Required</th></tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Data Management</td>
+          <td class="gap-control">Does the organization maintain a documented data retention schedule?</td>
+          <td class="gap-finding">No formal retention schedule; data is retained indefinitely by default.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Data Retention Schedule</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Data Management</td>
+          <td class="gap-control">Is there a documented and tested data deletion/destruction procedure upon client request or contract termination?</td>
+          <td class="gap-finding">No formal procedure; deletions have been handled manually on an ad hoc basis.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Data Deletion &amp; Destruction SOP</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Data Management</td>
+          <td class="gap-control">Is production data used in non-production (development/test/staging) environments?</td>
+          <td class="gap-finding">Production PHI is currently copied to staging without masking or de-identification.</td>
+          <td class="gap-date">December 12, 2026</td>
+          <td class="gap-artifact">Non-Production Data Handling Policy</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Data Management</td>
+          <td class="gap-control">Is there a data masking or de-identification process for any non-production use of data?</td>
+          <td class="gap-finding">No masking/synthetic-data process exists for staging or developer environments.</td>
+          <td class="gap-date">December 12, 2026</td>
+          <td class="gap-artifact">Data Masking / Synthetic Data Procedure</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Security Policy</td>
+          <td class="gap-control">Does the organization conduct a periodic (at least annual) formal risk assessment?</td>
+          <td class="gap-finding">No formal, documented risk assessment has been completed to date.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">SOC 2 Type I Report</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Access Control</td>
+          <td class="gap-control">Are user access rights reviewed on a periodic (at least quarterly) basis?</td>
+          <td class="gap-finding">No periodic access recertification process exists; access reviews have been reactive only.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Access Control</td>
+          <td class="gap-control">Does the organization log and actively monitor privileged account activity?</td>
+          <td class="gap-finding">Privileged activity is logged but not actively monitored or alerted on.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Tabletop Exercise After-Action Report</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Incident Management</td>
+          <td class="gap-control">Is there defined, continuous monitoring and alerting for security events on production systems?</td>
+          <td class="gap-finding">Logs are collected but not continuously monitored; no alerting pipeline is configured.</td>
+          <td class="gap-date">December 12, 2026</td>
+          <td class="gap-artifact">Vendor BAA Tracker (2 outstanding)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Incident Management</td>
+          <td class="gap-control">Does the organization maintain cyber liability / technology errors &amp; omissions (E&amp;O) insurance?</td>
+          <td class="gap-finding">Coverage has not yet been bound; quotes are being evaluated.</td>
+          <td class="gap-date">December 12, 2026</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Third-Party Management</td>
+          <td class="gap-control">Are Business Associate Agreements (BAAs) executed with all subprocessors that handle PHI?</td>
+          <td class="gap-finding">2 of 9 listed subprocessors do not yet have an executed BAA on file.</td>
+          <td class="gap-date">November 27, 2026</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Third-Party Management</td>
+          <td class="gap-control">Is there a documented approval process before employees adopt new third-party SaaS or AI tools?</td>
+          <td class="gap-finding">No formal intake/approval process exists for new SaaS or AI tool adoption.</td>
+          <td class="gap-date">December 12, 2026</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-high">High</span></td>
+          <td class="gap-domain">Business Continuity</td>
+          <td class="gap-control">Are backups tested for restorability on a periodic basis?</td>
+          <td class="gap-finding">Backup restoration has not been formally tested within the past 12 months.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Asset Management</td>
+          <td class="gap-control">Are all production servers and endpoints tagged with a data classification level?</td>
+          <td class="gap-finding">Asset tagging exists for ownership but not for data classification level.</td>
+          <td class="gap-date">December 27, 2026</td>
+          <td class="gap-artifact">Data Classification Tagging Standard (updated)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Asset Management</td>
+          <td class="gap-control">Are end-of-life / end-of-support dates tracked for all software and operating system versions in use?</td>
+          <td class="gap-finding">No centralized EOL/EOS tracking process exists; currently ad hoc.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">EOL/EOS Tracking Register</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Security Policy</td>
+          <td class="gap-control">Has the organization completed a SOC 2 Type I or Type II audit, or a formal HITRUST assessment?</td>
+          <td class="gap-finding">SOC 2 Type I readiness assessment is in progress; no completed audit yet.</td>
+          <td class="gap-date">January 26, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Access Control</td>
+          <td class="gap-control">Is remote access to the corporate network restricted to company-managed, MDM-enrolled devices?</td>
+          <td class="gap-finding">Some staff access company systems from unmanaged personal devices.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Access Control</td>
+          <td class="gap-control">Is there a documented process for emergency (“break-glass”) access to production systems?</td>
+          <td class="gap-finding">No formal break-glass procedure is documented.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Incident Management</td>
+          <td class="gap-control">Is the incident response plan tested via tabletop exercise or similar at least annually?</td>
+          <td class="gap-finding">The IR plan has not yet been exercised through a tabletop simulation.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Third-Party Management</td>
+          <td class="gap-control">Is there a vendor risk assessment performed prior to onboarding a new vendor?</td>
+          <td class="gap-finding">No formal pre-onboarding risk assessment process exists.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Third-Party Management</td>
+          <td class="gap-control">Does the organization review vendor SOC 2 reports or equivalent security attestations prior to engagement?</td>
+          <td class="gap-finding">Vendor security attestations are not consistently collected or reviewed.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Third-Party Management</td>
+          <td class="gap-control">Is vendor access to production systems reviewed or re-certified periodically?</td>
+          <td class="gap-finding">No periodic re-certification of vendor access currently takes place.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-med">Medium</span></td>
+          <td class="gap-domain">Business Continuity</td>
+          <td class="gap-control">Is the BC/DR plan tested at least annually?</td>
+          <td class="gap-finding">The BC/DR plan has not yet been formally tested.</td>
+          <td class="gap-date">January 11, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-low">Low</span></td>
+          <td class="gap-domain">Asset Management</td>
+          <td class="gap-control">Does the organization maintain a software bill of materials (SBOM) for its production application?</td>
+          <td class="gap-finding">No SBOM currently generated for the production codebase or its dependencies.</td>
+          <td class="gap-date">January 26, 2027</td>
+          <td class="gap-artifact">Software Bill of Materials (SBOM)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-low">Low</span></td>
+          <td class="gap-domain">Security Policy</td>
+          <td class="gap-control">Does the organization have a formal exception process for policy deviations?</td>
+          <td class="gap-finding">Policy exceptions are currently handled informally with no documented process.</td>
+          <td class="gap-date">January 26, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-low">Low</span></td>
+          <td class="gap-domain">Business Continuity</td>
+          <td class="gap-control">Does the organization maintain an alternate communication plan for use during an outage or incident?</td>
+          <td class="gap-finding">No documented out-of-band communication plan exists for staff or customers during an outage.</td>
+          <td class="gap-date">January 26, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+
+        <tr>
+          <td><span class="pr-pill pr-low">Low</span></td>
+          <td class="gap-domain">Business Continuity</td>
+          <td class="gap-control">Is there a documented succession plan for key personnel (e.g., Security Officer, CTO)?</td>
+          <td class="gap-finding">No formal succession plan exists for key security/technical roles.</td>
+          <td class="gap-date">January 26, 2027</td>
+          <td class="gap-artifact">Remediation Evidence (TBD)</td>
+        </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div>ClearPath Health, Inc. &mdash; SIG Lite Response &amp; Gap Register &mdash; Fictional sample for demonstration purposes only.</div>
+    <div>Prepared with Deal Unlocker by Sui-Generis LLC &mdash; Knoxville, TN</div>
+  </div>
+
+</div>
+</body>
+</html>
