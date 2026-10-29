@@ -2,7 +2,9 @@
 72-hour security questionnaire completion service — SIG Lite, CAIQ, and custom formats. Answer library, Gap Register, and Reviewer Brief generation.
 
 Productized by Sui-Generis. See [`PRICING.md`](PRICING.md) for the full
-tier/add-on structure.
+tier/add-on structure, and [`legal/SERVICES_AGREEMENT.md`](legal/SERVICES_AGREEMENT.md)
+and [`legal/NDA.md`](legal/NDA.md) for the contract templates every
+engagement should run on.
 
 ## Layout
 
