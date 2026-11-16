@@ -26,10 +26,16 @@ published pricing (see `PRICING.md`):
   rush / per retainer terms)
 - **Add-ons included (if any):** ________________________________
 
-Services outside this scope — including expanded questionnaire counts,
-additional rounds of revision beyond what the tier includes, or add-ons not
-listed above — are out of scope unless added by written amendment (including
-email confirmation) signed or acknowledged by both parties.
+**Scope cap:** Flat-rate tiers cover up to 150 questions. If the actual
+questionnaire exceeds that count, Provider will quote the additional scope
+and confirm it with Client in writing before beginning work on the excess —
+it is never absorbed into the flat rate automatically.
+
+Services outside this scope — including expanded questionnaire counts
+beyond the cap above, additional rounds of revision beyond what the tier
+includes, or add-ons not listed above — are out of scope unless added by
+written amendment (including email confirmation) signed or acknowledged by
+both parties.
 
 ---
 
@@ -37,10 +43,14 @@ email confirmation) signed or acknowledged by both parties.
 
 **Provider will not submit, send, or disclose any answer, document, or
 deliverable to any third party (including Client's buyer, reviewer, or
-regulator) without Client's prior written approval.** Client is responsible
-for reviewing every deliverable before it is used or forwarded. This
-guardrail applies to every tier and add-on under this Agreement without
-exception.
+regulator) without Client's prior written approval.** Client acknowledges
+that every answer is drafted from information Client provides (policies,
+prior questionnaire answers, and technical details supplied by Client) and
+Provider's professional judgment applied to that information — Provider is
+not independently verifying Client's underlying security posture. Client is
+responsible for reviewing and approving every deliverable before it is used
+or forwarded. This guardrail applies to every tier and add-on under this
+Agreement without exception.
 
 ---
 

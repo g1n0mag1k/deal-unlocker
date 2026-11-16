@@ -14,6 +14,11 @@ back to their buyer.
 | **Rush (24-hour)** | **+40% over the applicable base fee** (e.g. $2,100 at standard rate) | Same deliverable, expedited. Reflects real after-hours/displaced-work cost of compressing the turnaround, not just a speed tax. |
 | **Additional questionnaire** (existing client, no retainer) | **$250–350** | Reuses the client's answer vault; priced below a fresh engagement because the library is already built. |
 
+**Scope cap:** The one-off and rush tiers cover up to 150 questions. Larger
+or unusually complex forms are quoted before work starts — never absorbed
+into the flat rate. This matches the structural guardrail competitors like
+Polaris Cybersecurity use to cap their own scope-creep risk.
+
 ## Recurring
 
 | Tier | Price | What it is |
@@ -43,9 +48,20 @@ vCISO retainers supports pricing HITRUST and the diligence pack above
 generic rates. See the retainer/rush-fee research discussed with Claude
 (2026-10-29) for full sourcing.
 
+## Positioning vs. comps
+
+Polaris and similar comps sell this as compliance catch-up for teams
+without SOC 2, on a ~7-business-day SLA. Deal Unlocker sells sales
+velocity — clearing a stalled enterprise deal in 72 hours before the
+buyer's internal champion loses momentum. Same underlying work, different
+buying trigger: founders aren't shopping for compliance help, they're
+trying to un-stick a deal this week.
+
 ## Guardrails that apply to every tier
 
 - Never say "compliant" or "in violation" — that's a legal conclusion.
 - Client approves every answer before submission.
+- Scope cap: 150 questions on the flat-rate tiers; anything larger is
+  quoted before work starts.
 - Client data never enters a public repo or consumer AI tier.
 - E&O insurance in place before the third client.
