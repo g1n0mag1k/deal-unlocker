@@ -3,21 +3,242 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deal Unlocker</title>
+<title>Deal Unlocker — 72-Hour Security Questionnaire Completion</title>
+<meta name="description" content="SIG Lite, CAIQ, and custom vendor-security questionnaires completed in 72 business hours. You approve every answer before it goes back to your buyer.">
 <style>
-  body { margin: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif; background: #f6f8fa; color: #1c242e; }
-  a { color: #1a73a3; }
+  :root {
+    --navy: #0f2a4a;
+    --accent: #1a73a3;
+    --ink: #1c242e;
+    --muted: #5b6672;
+    --border: #d7dde3;
+    --bg: #f6f8fa;
+    --bg-accent: #e8f1f6;
+    --white: #ffffff;
+    --on-dark-muted: #9fb8d6;
+    --on-dark-light: #d7e3f0;
+    --danger: #b23b2e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--navy); }
+  .wrap { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .inner { width: 100%; max-width: 860px; padding: 0 24px; }
+  .inner-narrow { width: 100%; max-width: 700px; padding: 0 24px; }
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+  h1, h2, h3 { margin: 0; color: var(--navy); }
+  .btn {
+    display: inline-block; font-weight: 700; font-size: 14.5px; padding: 13px 26px; border-radius: 7px;
+  }
+  .btn-light { background: var(--white); color: var(--navy); }
+  .btn-dark { background: var(--navy); color: var(--white); }
+  .card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 22px; background: var(--white);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 20px; }
+  .section { padding: 56px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--navy); background: var(--bg-accent); font-weight: 700; }
+  .faq summary { cursor: pointer; font-weight: 600; color: var(--navy); padding: 14px 0; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-item p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  nav { width: 100%; border-bottom: 1px solid var(--border); background: var(--white); }
+  nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 860px; }
+  nav .wordmark { font-weight: 800; color: var(--navy); font-size: 15px; }
+  nav .links a { font-size: 13.5px; color: var(--muted); margin-left: 20px; font-weight: 600; }
+  nav .links a:hover { color: var(--navy); }
 </style>
 </head>
 <body>
-<div style="max-width: 640px; margin: 0 auto; padding: 72px 24px;">
-  <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #5b6672; font-weight: 600;">Sui-Generis</div>
-  <h1 style="color: #0f2a4a; margin: 8px 0 24px;">Deal Unlocker</h1>
-  <p style="color: #5b6672; line-height: 1.6;">72-hour security questionnaire turnaround — SIG Lite, CAIQ, or custom. Per-lead pages:</p>
-  <ul style="line-height: 2;">
-    <li><a href="/reclaim-security.html">For Reclaim Security</a></li>
-    <li><a href="/rapidfort.html">For RapidFort</a></li>
-  </ul>
+
+<nav><div class="inner"><div class="wordmark">DEAL UNLOCKER</div><div class="links">
+  <a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
+</div></div></nav>
+
+<div class="wrap">
+  <!-- Hero -->
+  <div class="wrap" style="background: var(--navy); color: var(--white); padding: 64px 0 56px;">
+    <div class="inner-narrow" style="display:flex; flex-direction:column; gap:20px; text-align:center; align-items:center;">
+      <div class="eyebrow" style="color: var(--on-dark-muted);">SUI-GENERIS</div>
+      <h1 style="color: var(--white); font-size: clamp(28px, 4.5vw, 38px); line-height: 1.25; letter-spacing: -0.3px;">A stalled security questionnaire doesn't have to stall the deal.</h1>
+      <p style="margin:0; font-size:16px; line-height:1.6; color: var(--on-dark-light);">SIG Lite, CAIQ, or a buyer's custom spreadsheet — completed, evidence-mapped, and ready to submit in 72 business hours. You approve every answer before it goes back to your buyer.</p>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:8px;">
+        <a class="btn btn-light" href="mailto:andrew@hermesrelay.dev?subject=Free%2015-row%20trial&body=Here%27s%20the%20ugliest%2015%20rows%20from%20an%20open%20questionnaire%3A">Send your worst 15 rows — free</a>
+        <div style="font-size:12px; color: var(--on-dark-muted);">No contract. No onboarding call. Just the file.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why deals stall -->
+  <div class="section"><div class="inner">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:28px;">Why deals stall on paperwork, not price</h2>
+    <div class="grid">
+      <div class="card">
+        <div style="font-weight:700; color:var(--accent);">Missing evidence</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Half the rows need a policy doc, a BAA, or a control you have — just not written down anywhere a reviewer can see.</div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; color:var(--accent);">Inconsistent answers</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Three people fill out three sections differently, and procurement flags the contradictions instead of signing off.</div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; color:var(--accent);">A week disappears</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Nobody on a sales or eng team has a free week to sit with a 150-row spreadsheet — so it sits untouched instead.</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- Process -->
+  <div class="wrap" style="background: var(--white);"><div class="section"><div class="inner">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:28px;">How it works</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="eyebrow" style="color:var(--accent);">Step 1</div>
+        <div style="font-weight:700;">Send the file</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Upload the questionnaire (PDF, Excel, or portal export) and whatever evidence you already have. 10–15 minutes.</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--accent);">Step 2</div>
+        <div style="font-weight:700;">Evidence-mapped draft</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Every answer is matched against your actual documentation — never invented — with a confidence flag on anything thin.</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--accent);">Step 3</div>
+        <div style="font-weight:700;">You review and approve</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Every row, before anything goes to your buyer. One correction round included.</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="color:var(--accent);">Step 4</div>
+        <div style="font-weight:700;">Submit-ready deliverable</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Final Answer Set, Gap Register, and Reviewer Brief — in your original format, with named target dates on every open item.</div>
+      </div>
+    </div>
+  </div></div></div>
+
+  <!-- Trust cards -->
+  <div class="section"><div class="inner">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:28px;">The short version</h2>
+    <div class="grid">
+      <div class="card">
+        <div style="font-size:20px; font-weight:700; color:var(--accent);">72 hours</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Flat turnaround on SIG Lite, CAIQ, or a custom buyer spreadsheet — not a queue, not an hourly clock.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:20px; font-weight:700; color:var(--accent);">$900 founding rate</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">First five clients. Standard rate is $1,500. Covers up to 150 questions — larger forms are quoted before work starts.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:20px; font-weight:700; color:var(--accent);">You approve every answer</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Drafted from what you give me, never guessed. Nothing reaches your buyer without your sign-off first.</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- Sample deliverable -->
+  <div class="wrap" style="background: var(--bg-accent);"><div class="section"><div class="inner">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:6px;">What the finished deliverable looks like</h2>
+    <p style="margin:0 0 20px; font-size:13.5px; color:var(--muted); text-align:center;">Sample below — fictional company, shown for format only.</p>
+    <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--white);">
+      <div style="background:var(--navy); color:var(--white); padding:16px 20px;">
+        <div class="eyebrow" style="color:var(--on-dark-muted);">SIG Lite Response and Gap Register</div>
+        <div style="font-size:16px; font-weight:700; margin-top:2px;">ClearPath Health, Inc.</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Question</th><th>Response</th><th>Gap Register</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Is PHI masked in non-production environments?</td>
+              <td style="color:var(--muted);">No — production PHI is currently copied to staging without masking or de-identification.</td>
+              <td style="color:var(--danger); font-weight:600; white-space:nowrap;">Target Dec 12</td>
+            </tr>
+            <tr>
+              <td style="border-bottom:none;">Are subprocessor BAAs executed for all third parties?</td>
+              <td style="border-bottom:none; color:var(--muted);">7 of 9 — two subprocessor BAAs are not yet on file.</td>
+              <td style="border-bottom:none; color:var(--danger); font-weight:600; white-space:nowrap;">Target Nov 27</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p style="margin:16px 0 0; font-size:13.5px; color:var(--muted); text-align:center;">Every open item gets a named target date, not just a checkbox — so your buyer sees a plan, not just a gap.</p>
+  </div></div></div>
+
+  <!-- Pricing -->
+  <div class="section" id="pricing"><div class="inner">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:6px;">Pricing</h2>
+    <p style="margin:0 0 28px; font-size:13.5px; color:var(--muted); text-align:center;">List price shown. Founding-client rate applies to the first five engagements.</p>
+    <div class="grid">
+      <div class="card">
+        <div style="font-weight:700; font-size:16px;">One-off questionnaire</div>
+        <div style="font-size:24px; font-weight:800; color:var(--navy);">$900 <span style="font-size:13px; font-weight:600; color:var(--muted);">founding → $1,500 standard</span></div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Single SIG Lite / CAIQ / custom questionnaire, up to 150 questions. Full Answer Set, Gap Register, and Reviewer Brief. 72-hour turnaround.</div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; font-size:16px;">Rush (24-hour)</div>
+        <div style="font-size:24px; font-weight:800; color:var(--navy);">+40%</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">Same deliverable, expedited — over the applicable base fee (e.g. $2,100 at the standard rate).</div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; font-size:16px;">Additional questionnaire</div>
+        <div style="font-size:24px; font-weight:800; color:var(--navy);">$250–350</div>
+        <div style="font-size:13.5px; color:var(--muted); line-height:1.5;">For existing clients — reuses your answer vault, so it's priced below a fresh engagement.</div>
+      </div>
+    </div>
+    <p style="margin:24px 0 0; font-size:13px; color:var(--muted); text-align:center;">Scope cap: 150 questions on the flat-rate tiers. Larger or unusually complex forms are quoted before work starts — never absorbed into the flat rate.</p>
+  </div></div>
+
+  <!-- Scope -->
+  <div class="wrap" style="background: var(--white);"><div class="section"><div class="inner-narrow">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:28px;">What this is — and isn't</h2>
+    <div class="grid">
+      <div class="card">
+        <div style="font-weight:700; color:var(--accent);">This is</div>
+        <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--muted); line-height:1.8;">
+          <li>Vendor-readiness packaging: a complete, evidence-referenced answer set you can defend.</li>
+          <li>Drafted from your real documentation, with every gap flagged and dated, not papered over.</li>
+          <li>Reviewed and approved by you before it reaches your buyer.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; color:var(--danger);">This isn't</div>
+        <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--muted); line-height:1.8;">
+          <li>A certification, audit, or legal compliance determination — that call is yours, with counsel if needed.</li>
+          <li>A tool that fabricates controls you don't have. If the answer is "no," it says no, with a target date to fix it.</li>
+          <li>Access to your systems — just the questionnaire and the evidence you choose to share.</li>
+        </ul>
+      </div>
+    </div>
+  </div></div></div>
+
+  <!-- FAQ -->
+  <div class="section" id="faq"><div class="inner-narrow">
+    <h2 style="font-size:22px; text-align:center; margin-bottom:28px;">FAQ</h2>
+    <div class="faq">
+      <div class="faq-item"><details><summary>What formats do you handle?</summary><p>SIG Lite, SIG Full, CAIQ, VSA, and custom buyer spreadsheets — PDF, Excel, or portal exports. If it's a format you haven't seen before, it still gets quoted before anything starts.</p></details></div>
+      <div class="faq-item"><details><summary>When does the 72-hour clock start?</summary><p>After intake is complete — the questionnaire file plus whatever evidence you're sending is in hand. Waiting on evidence from your side pauses the clock, it doesn't eat into it.</p></details></div>
+      <div class="faq-item"><details><summary>What if my questionnaire is over 150 questions?</summary><p>You get a quote before any work starts — never a surprise invoice after the fact.</p></details></div>
+      <div class="faq-item"><details><summary>Do you guarantee I'll pass the review?</summary><p>No — nobody honestly can. What's guaranteed is a complete, evidence-backed, internally consistent answer set that gives your reviewer something real to work with, not a stall.</p></details></div>
+      <div class="faq-item"><details><summary>Where does my data go?</summary><p>Nowhere but this engagement. Your questionnaire and evidence are never stored in a public repository or run through a consumer AI tool.</p></details></div>
+      <div class="faq-item"><details><summary>What if I need a correction after delivery?</summary><p>One correction round is included. Anything beyond that is a quick turnaround at the hourly rate, not a new engagement.</p></details></div>
+    </div>
+  </div></div>
+
+  <!-- Final CTA / footer -->
+  <div class="wrap" style="background: var(--bg-accent);" id="contact"><div class="section" style="padding:48px 0; text-align:center;"><div class="inner-narrow" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+    <div style="font-size:18px; font-weight:700; color:var(--navy);">Got one open right now?</div>
+    <a class="btn btn-dark" href="mailto:andrew@hermesrelay.dev?subject=Free%2015-row%20trial&body=Here%27s%20the%20ugliest%2015%20rows%20from%20an%20open%20questionnaire%3A">Send your worst 15 rows — free</a>
+    <div style="font-size:12.5px; color:var(--muted);">Andrew Rogers &middot; Sui-Generis &middot; andrew@hermesrelay.dev</div>
+  </div></div></div>
+
 </div>
 </body>
 </html>
